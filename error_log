@@ -1,0 +1,82 @@
+[10-Oct-2022 09:53:12 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 310
+[20-Oct-2022 05:24:18 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[20-Oct-2022 05:24:18 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[20-Oct-2022 05:24:18 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[20-Oct-2022 05:24:18 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[20-Oct-2022 05:24:18 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[20-Oct-2022 05:24:18 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[20-Oct-2022 10:24:42 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[20-Oct-2022 10:24:42 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[20-Oct-2022 10:24:42 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[20-Oct-2022 10:24:42 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[20-Oct-2022 10:24:42 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[20-Oct-2022 10:24:42 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[20-Oct-2022 18:43:33 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[20-Oct-2022 18:43:33 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[20-Oct-2022 18:43:33 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[20-Oct-2022 18:43:33 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[20-Oct-2022 18:43:33 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[20-Oct-2022 18:43:33 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[23-Oct-2022 05:46:47 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 310
+[23-Oct-2022 05:47:02 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 310
+[23-Oct-2022 05:47:40 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 310
+[23-Oct-2022 05:48:30 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 310
+[26-Oct-2022 09:56:32 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 09:56:32 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 09:56:32 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[26-Oct-2022 09:56:32 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[26-Oct-2022 09:56:32 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[26-Oct-2022 09:56:32 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[26-Oct-2022 09:56:57 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 09:56:57 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 09:56:57 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[26-Oct-2022 09:56:57 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[26-Oct-2022 09:56:57 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[26-Oct-2022 09:56:57 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[26-Oct-2022 10:00:18 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 10:00:18 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 10:00:18 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[26-Oct-2022 10:00:18 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[26-Oct-2022 10:00:18 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[26-Oct-2022 10:00:18 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[26-Oct-2022 10:00:18 UTC] PHP Warning:  unlink(upload/enroll_default_v1_01.jpg): No such file or directory in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 919
+[26-Oct-2022 10:44:29 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 10:44:29 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 10:44:29 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[26-Oct-2022 10:44:29 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[26-Oct-2022 10:44:29 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[26-Oct-2022 10:44:29 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[26-Oct-2022 10:44:40 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 10:44:40 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 10:44:40 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[26-Oct-2022 10:44:40 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[26-Oct-2022 10:44:40 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[26-Oct-2022 10:44:40 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[26-Oct-2022 11:46:37 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 11:46:37 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 11:46:37 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[26-Oct-2022 11:46:37 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[26-Oct-2022 11:46:37 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[26-Oct-2022 11:46:37 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[26-Oct-2022 12:18:49 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 12:18:49 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[26-Oct-2022 12:18:49 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[26-Oct-2022 12:18:49 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[26-Oct-2022 12:18:49 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[26-Oct-2022 12:18:49 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[27-Oct-2022 07:22:32 UTC] PHP Warning:  unlink(upload/enroll_default_v1_01.jpg): No such file or directory in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 919
+[31-Oct-2022 02:05:41 UTC] PHP Warning:  date() expects at least 1 parameter, 0 given in /home/superta1/public_html/sa-oday/view/user/registration.php on line 11
+[31-Oct-2022 02:06:39 UTC] PHP Warning:  date() expects at least 1 parameter, 0 given in /home/superta1/public_html/sa-oday/view/user/registration.php on line 81
+[05-Nov-2022 11:33:04 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[05-Nov-2022 11:33:04 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[05-Nov-2022 11:33:04 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[05-Nov-2022 11:33:04 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[05-Nov-2022 11:33:04 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[05-Nov-2022 11:33:04 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[06-Nov-2022 15:43:38 UTC] PHP Warning:  file_get_contents(): Filename cannot be empty in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[06-Nov-2022 15:43:39 UTC] PHP Warning:  imagecreatefromstring(): Empty string or invalid image in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 891
+[06-Nov-2022 15:43:39 UTC] PHP Warning:  imagesx() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 892
+[06-Nov-2022 15:43:39 UTC] PHP Warning:  imagesy() expects parameter 1 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 893
+[06-Nov-2022 15:43:39 UTC] PHP Warning:  Division by zero in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 894
+[06-Nov-2022 15:43:39 UTC] PHP Warning:  imagecopyresampled() expects parameter 2 to be resource, bool given in /home/superta1/public_html/sa-oday/class/Controller/team.php on line 909
+[21-Nov-2022 12:44:52 UTC] PHP Warning:  Creating default object from empty value in /home/superta1/public_html/sa-oday/class/Controller/mainPage.php on line 58

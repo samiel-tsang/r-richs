@@ -1,0 +1,7 @@
+# dependencies
+/vendor
+/node_modules
+/download
+/upload
+/print_files
+

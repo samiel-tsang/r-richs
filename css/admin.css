@@ -1,0 +1,203 @@
+:root {
+   --mainBarSize: 180px;
+   --themeColor: #152238;
+   --secondColor: #203354;
+   --subBarColor: #1c2e4a;
+   --themeBorderColor: #23395d;
+}
+
+header {
+   background-color: var(--themeColor);
+   border-bottom: 1px solid var(--themeBorderColor);
+}
+#navMainBar {
+   background-color: var(--themeColor);
+   width: 100%;
+   text-align: center;
+}
+
+.topBarItem i {
+   transition: 0.6s;
+}
+
+.topBarItem:hover i {
+   color: var(--themeBorderColor);
+}
+
+.mainBarItem {
+   color: white;
+   border-bottom: 1px solid var(--themeBorderColor);
+   transition: 0.6s;
+}
+
+.mainBarItem:hover{
+   color: white;   
+   background-color: var(--secondColor);
+}
+
+.subBarItem {
+   background-color: var(--subBarColor);
+}
+
+#promptMsg {
+   z-index: 1050;
+   position: absolute;
+   top: 10%;
+   left: 50%;
+   width: 90vw;
+   margin-left: -45vw;
+   height: 0;
+   opacity: 0;
+   transition: opacity 1s ease; 
+   -webkit-transition: opacity 1s ease; 
+   -moz-transition: opacity 1s ease; 
+   -o-transition: opacity 1s ease;
+}
+
+#promptMsg.show {
+   height: auto;
+   opacity: 1;  
+}
+
+@media screen {
+	.content {
+	   margin-top: 113px;
+	}
+}
+
+@media screen and (min-width: 768px) {
+   #navMainBar {
+      width: var(--mainBarSize); 
+      height: 100%;
+      position: fixed;
+      top: 57px;
+      left: 0px;
+      display: block;
+      overflow: auto;
+      text-align: left;
+   }
+   
+   .content {
+      margin-left: var(--mainBarSize);
+      margin-top: 57px;
+   }
+
+   .content>form .form-group label {
+      text-align: right;
+   }
+
+}
+
+.funcBar {
+   background-color: var(--secondColor);
+}
+.funcBar .funcTitle {
+   padding: 1rem;
+   font-weight: bold;
+}
+
+.funcBar .funcMenu > .btn {
+   color: white;
+   margin: 0 0.15rem;
+   background-color: #3090C7;
+   transition: 0.15s
+}
+
+.funcBar .funcMenu > a:hover {
+   background-color: #357EC7;
+}
+
+#searchForm {
+   background-color: #F5F5F5;
+}
+
+.table td, .table th {
+   padding: .5rem;
+   vertical-align: middle;
+}
+
+.navbar-dark .navbar-text > a >i:hover {
+   color: #DDDDDD;
+}
+
+.displayImage {
+   width: 100%;
+   max-width: 300px;
+}
+
+.menuBtn {
+   width: 150px;
+}
+
+.card{
+   /* background-color: whitesmoke; */
+}
+
+.card-top{
+   background-color: var(--secondColor);
+   color: #ffffff; 
+}
+
+.card-title{
+   padding: 10px 0px 0px 0px;
+}
+
+.badge {
+   padding: .5em .5em;
+}
+
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+   background-color: #EEEEEE;
+}
+
+.dashboardicon, .dashboardicon:hover{   
+   width: 150px;
+   height: 150px;
+   color: var(--secondColor);   
+   font-size: 14px;
+   font-weight: bold;
+}
+
+.row{
+   margin: 10px 0px;
+}
+
+.nav-pills .nav-link {
+   background: lavender;
+}
+
+.whatsapp-float, .whatsapp-float:hover {
+	position:fixed;
+	width:60px;
+	height:60px;
+	bottom:20px;
+	right:20px;
+	background-color:#25d366;
+	color:#FFF;
+	border-radius:50px;
+	text-align:center;
+  font-size:30px;
+	box-shadow: 2px 2px 3px #999;
+  z-index:100;
+  text-decoration: none;  
+}
+
+.email-float, .email-float:hover {
+	position:fixed;
+	width:60px;
+	height:60px;
+	bottom:100px;
+	right:20px;
+	background-color:#255cd3;
+	color:#FFF;
+	border-radius:50px;
+	text-align:center;
+  font-size:30px;
+	box-shadow: 2px 2px 3px #999;
+  z-index:100;
+  text-decoration: none;  
+}
+
+.my-float {
+	margin-top:16px;
+}

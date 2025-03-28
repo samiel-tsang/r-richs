@@ -1,0 +1,15 @@
+{
+    "name": "softdlqn/jcievent",
+    "authors": [
+        {
+            "name": "Stanley Ho - SoftDev Server",
+            "email": "stanleyho@softdev.hk"
+        }
+    ],
+    "require": {
+        "phpmailer/phpmailer": "^6.5",
+        "bacon/bacon-qr-code": "^2.0",
+        "phpoffice/phpspreadsheet": "^1.19",
+        "donatj/simplecalendar": "^0.8.0"
+    }
+}
