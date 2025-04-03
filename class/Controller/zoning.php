@@ -43,11 +43,30 @@ class zoning implements Listable {
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
 		
+		$currentUserObj = unserialize($_SESSION['user']);				
+
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.zoningEmptyID')]);	
+
+		$zoningObj = self::find($request->get->id);		
+	
+		if(is_null($zoningObj))
+			return new Data(['success'=>false, 'message'=>L('error.zoningNotFound'), 'field'=>'notice']);					
 			
 		$sql = Sql::delete('zoning')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "zoning";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete zoning [".$zoningObj->name."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);
+
 			return new Data(['success'=>true, 'message'=>L('info.zoningDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.zoningDeleteFailed')]);	
@@ -110,11 +129,32 @@ class zoning implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->name),               
-         ])) {
+		$addValues = [
+			strip_tags($request->post->name),               
+	 	];
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Zoning";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New Zoning [".$request->post->name."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"name", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->name)
+					]
+				];
+
+			systemLog::add($logData);			
 
 			return new Data(['success'=>true, 'message'=>L('info.saved')]);
 			
@@ -144,16 +184,35 @@ class zoning implements Listable {
 
         $editFields = [];
 		$editValues = [];
+		$logContent = [] ;
 
 		if (isset($request->post->name) && !empty($request->post->name)) {
+
 			$editFields['name'] = "?";
 			$editValues[] = $request->post->name;
-		}		
+
+			if($request->post->name!=$zoningObj->name) {
+				$logContent[] = [
+					"key"=>"name", 
+					"valueFrom"=>$zoningObj->name, 
+					"valueTo"=>strip_tags($request->post->name)					
+				];	
+			}			
+		}	
 
 		if (isset($request->post->status) && !empty($request->post->status)) {
+
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
-		}	  
+
+			if($request->post->status!=$zoningObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$zoningObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -165,6 +224,20 @@ class zoning implements Listable {
 		$sql = Sql::update('zoning')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "Zoning";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit Zoning [".$zoningObj->name."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);
+			}
+
+
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);

@@ -195,7 +195,7 @@ class user implements Listable {
 		if (!self::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage'), 'field'=>'notice']);
 
-		$userObj = unserialize($_SESSION['user']);
+		$currentUserObj = unserialize($_SESSION['user']);
 		
 		if (!isset($request->post->username) || empty($request->post->username)) 
 			return new Data(['success'=>false, 'message'=>L('error.userEmptyUserName'), 'field'=>'userName']);
@@ -257,11 +257,11 @@ class user implements Listable {
 			'signatureDocID' => "?", 
 			'password' => "?", 
 			'status'=>"?", 
-			'createBy'=>$userObj->id, 
-			'modifyBy'=>$userObj->id]
+			'createBy'=>$currentUserObj->id, 
+			'modifyBy'=>$currentUserObj->id]
 		);
 
-		if ($sql->prepare()->execute([
+		$addValues = [
 			$request->post->username, 
 			$request->post->displayName, 
 			$request->post->email, 
@@ -271,8 +271,57 @@ class user implements Listable {
 			$signatureDocID, 
 			password_hash($request->post->password, PASSWORD_BCRYPT), 
 			1
-		])) {
+		];
+
+		if ($sql->prepare()->execute($addValues)) {
 			$id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "User";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New User [".$request->post->username."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"username", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->username)
+					],[
+						"key"=>"displayName", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->displayName)
+					]
+					,[
+						"key"=>"email", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->email)
+					]
+					,[
+						"key"=>"phone", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->phone)
+					]
+					,[
+						"key"=>"position", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->position)
+					]
+					,[
+						"key"=>"roleID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->roleID)
+					],[
+						"key"=>"signatureDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($signatureDocID)
+					]
+				];
+
+			systemLog::add($logData);			
 
 			return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$id, 'name'=>$request->post->username]);
 			//return new Action('redirect', WebSystem::path(Route::getRouteByName('page.userInfo')->path(['id'=>$id]), false, false));
@@ -293,15 +342,25 @@ class user implements Listable {
 			return new Data(['success'=>false, 'message'=>L('error.userEmptyID'), 'field'=>'notice']);
 
 		$userObj = self::find($request->get->id);
+		
 		if(is_null($userObj))
 			return new Data(['success'=>false, 'message'=>L('error.userNotFound'), 'field'=>'notice']);
 
 		$editFields = [];
 		$editValues = [];
+		$logContent = [];
 		
-		if (!self::isAdmin($request->get->id)) {		
+		if (!self::isAdmin($request->get->id)) {
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
+
+			if($request->post->status!=$userObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$userObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];
+			}
 		}
 		
 		if ((isset($request->post->password) && !empty($request->post->password)) || 
@@ -309,6 +368,7 @@ class user implements Listable {
 				
 			if ($request->post->password != $request->post->cfmPassword)
 				return new Data(['success'=>false, 'message'=>L('error.userPasswordsNotMatch'), 'field'=>'userCfmPW']);
+
 			$editFields['password'] = "?";
 			$editValues[] = password_hash($request->post->password, PASSWORD_BCRYPT);
 		}
@@ -319,6 +379,14 @@ class user implements Listable {
 		if (isset($request->post->displayName) && !empty($request->post->displayName)) {
 			$editFields['displayName'] = "?";
 			$editValues[] = $request->post->displayName;
+
+			if($request->post->displayName!=$userObj->displayName) {
+				$logContent[] = [
+					"key"=>"displayName", 
+					"valueFrom"=>$userObj->displayName, 
+					"valueTo"=>strip_tags($request->post->displayName)					
+				];	
+			}		
 		}		
 
 		/*
@@ -338,6 +406,15 @@ class user implements Listable {
 
 			$editFields['email'] = "?";
 			$editValues[] = $request->post->email;
+
+			if($request->post->email!=$userObj->email) {
+				$logContent[] = [
+					"key"=>"email", 
+					"valueFrom"=>$userObj->email, 
+					"valueTo"=>strip_tags($request->post->email)					
+				];	
+			}
+
 		}	
 		
 		/*
@@ -346,8 +423,17 @@ class user implements Listable {
 		*/
 
 		if (isset($request->post->phone) && !empty($request->post->phone)) {
+
 			$editFields['phone'] = "?";
 			$editValues[] = $request->post->phone;
+
+			if($request->post->phone!=$userObj->phone) {
+				$logContent[] = [
+					"key"=>"phone", 
+					"valueFrom"=>$userObj->phone, 
+					"valueTo"=>strip_tags($request->post->phone)					
+				];	
+			}			
 		}					
 
 		/*
@@ -356,8 +442,18 @@ class user implements Listable {
 		*/
 
 		if (isset($request->post->position) && !empty($request->post->position)) {
+
 			$editFields['position'] = "?";
 			$editValues[] = $request->post->position;
+
+			if($request->post->position!=$userObj->position) {
+				$logContent[] = [
+					"key"=>"position", 
+					"valueFrom"=>$userObj->position, 
+					"valueTo"=>strip_tags($request->post->position)					
+				];	
+			}	
+
 		}	
 		
 			
@@ -365,8 +461,18 @@ class user implements Listable {
 			return new Data(['success'=>false, 'message'=>L('error.userEmptyRole'), 'field'=>'roleID']);				
 
 		if (isset($request->post->roleID) && !empty($request->post->roleID)) {
+
 			$editFields['roleID'] = "?";
 			$editValues[] = $request->post->roleID;
+
+			if($request->post->roleID!=$userObj->roleID) {
+				$logContent[] = [
+					"key"=>"roleID", 
+					"valueFrom"=>$userObj->roleID, 
+					"valueTo"=>strip_tags($request->post->roleID)
+				];	
+			}	
+
 		}			
 		
 		$signatureDocID = $userObj->signatureDocID;
@@ -374,6 +480,18 @@ class user implements Listable {
         if (isset($request->files->signatureDoc) && !empty($request->files->signatureDoc)) {
             $signatureDocID = documentHelper::upload($request->files->signatureDoc, "SIGNATURE");
             if($signatureDocID>0) {
+
+				$editFields['signatureDocID'] = "?";
+				$editValues[] = $request->post->signatureDocID;
+
+				if($request->post->signatureDocID!=$userObj->signatureDocID) {
+					$logContent[] = [
+						"key"=>"signatureDocID", 
+						"valueFrom"=>$userObj->signatureDocID, 
+						"valueTo"=>strip_tags($request->post->signatureDocID)					
+					];	
+				}
+
                 $editFields['signatureDocID'] = "?";
                 $editValues[] = $signatureDocID;  
             }
@@ -388,6 +506,18 @@ class user implements Listable {
 		
 		$sql = Sql::update('user')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute($editValues)) {
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "User";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit User [".$userObj->username."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);
+			}
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -396,16 +526,32 @@ class user implements Listable {
 	
 	public function delete($request) {	
 		if (!self::checklogin()) 
-			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+			return new Data(['success'=>false, 'message'=>L('login.signInMessage'), 'note'=>'signIn']);
+
+		$currentUserObj = unserialize($_SESSION['user']);			
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.userEmptyID')]);	
+
+		$userObj = self::find($request->get->id);			
 			
 		if (self::isAdmin($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.systemUserNotSusendable')]);	
 
 		$sql = Sql::delete('user')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "User";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete User [".$userObj->username."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);
+
 			return new Data(['success'=>true, 'message'=>L('info.userDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.userSuspendFailed')]);	
@@ -528,7 +674,7 @@ class user implements Listable {
 
 	public function userForm($request) {
 
-		if (!self::checklogin()) return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);
+		if (!self::checklogin()) return new Data(['success'=>false, 'message'=>L('login.signInMessage'), 'note'=>'signIn']);
 
 		$currentUserObj = unserialize($_SESSION['user']);
 		
@@ -617,7 +763,7 @@ class user implements Listable {
 	public static function removeDoc($request) {	
        
         if (!user::checklogin()) 
-			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.documentEmptyID')]);	
@@ -709,7 +855,7 @@ class user implements Listable {
 
 	public static function genTableBodyRow($listObj) {
         $htmlContent = "";
-        $htmlContent .= "<tr>";
+        $htmlContent .= "<tr data-id='".$listObj['id']."'>";
             $htmlContent .= "<td>".$listObj['id']."</td>";
 			$htmlContent .= "<td>".$listObj['username']."</td>";
 			$htmlContent .= "<td>".$listObj['displayName']."</td>";

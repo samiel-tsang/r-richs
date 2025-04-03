@@ -69,12 +69,31 @@ class task implements Listable {
     public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+		$currentUserObj = unserialize($_SESSION['user']);			
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.taskEmptyID')]);	
+
+		$taskObj = self::find($request->get->id);		
+
+		if(is_null($taskObj))
+			return new Data(['success'=>false, 'message'=>L('error.taskNotFound'), 'field'=>'notice']);				
 			
 		$sql = Sql::delete('task')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Task";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete Task [".$taskObj->description."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);	
+
 			return new Data(['success'=>true, 'message'=>L('info.taskDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.taskmDeleteFailed')]);	
@@ -215,16 +234,58 @@ class task implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->userID),     
-                strip_tags($request->post->tpbID),    
-                strip_tags($request->post->conditionID),    
-                strip_tags($request->post->description),    
-                strip_tags($request->post->deadline),    
-                strip_tags(1)           
-         ])) {
+		$addValues = [
+			strip_tags($request->post->userID),     
+			strip_tags($request->post->tpbID),    
+			strip_tags($request->post->conditionID),    
+			strip_tags($request->post->description),    
+			strip_tags($request->post->deadline),    
+			strip_tags(1)           
+		];
+
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Task";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New Task [".$request->post->description."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"userID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->userID)
+					],[
+						"key"=>"tpbID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->tpbID)
+					],[
+						"key"=>"conditionID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->conditionID)
+					],[
+						"key"=>"description", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->description)
+					],[
+						"key"=>"deadline", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->deadline)
+					],[
+						"key"=>"status", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags(1)
+					]
+				];
+
+			systemLog::add($logData);			
 
 			return new Data(['success'=>true, 'message'=>L('info.saved')]);
 			
@@ -262,36 +323,93 @@ class task implements Listable {
 
         $editFields = [];
 		$editValues = [];
+		$logContent = [];
+
 
 		if (isset($request->post->userID) && !empty($request->post->userID)) {
+
 			$editFields['userID'] = "?";
 			$editValues[] = $request->post->userID;
+
+			if($request->post->userID!=$taskObj->userID) {
+				$logContent[] = [
+					"key"=>"userID", 
+					"valueFrom"=>$taskObj->userID, 
+					"valueTo"=>strip_tags($request->post->userID)					
+				];	
+			}			
 		}	
 
 		if (isset($request->post->description) && !empty($request->post->description)) {
+
 			$editFields['description'] = "?";
 			$editValues[] = $request->post->description;
-		}	        
-        
+
+			if($request->post->description!=$taskObj->description) {
+				$logContent[] = [
+					"key"=>"description", 
+					"valueFrom"=>$taskObj->description, 
+					"valueTo"=>strip_tags($request->post->description)					
+				];	
+			}			
+		}			
+
 		if (isset($request->post->deadline) && !empty($request->post->deadline)) {
+
 			$editFields['deadline'] = "?";
 			$editValues[] = $request->post->deadline;
-		}		
-        
+
+			if($request->post->deadline.":00"!=$taskObj->deadline) {
+				$logContent[] = [
+					"key"=>"deadline", 
+					"valueFrom"=>$taskObj->deadline, 
+					"valueTo"=>strip_tags($request->post->deadline)					
+				];	
+			}			
+		}	
+
 		if (isset($request->post->tpbID) && !empty($request->post->tpbID)) {
+
 			$editFields['tpbID'] = "?";
 			$editValues[] = $request->post->tpbID;
-		}	
-        
+
+			if($request->post->tpbID!=$taskObj->tpbID) {
+				$logContent[] = [
+					"key"=>"tpbID", 
+					"valueFrom"=>$taskObj->tpbID, 
+					"valueTo"=>strip_tags($request->post->tpbID)					
+				];	
+			}			
+		}	       
+
 		if (isset($request->post->conditionID) && !empty($request->post->conditionID)) {
+
 			$editFields['conditionID'] = "?";
 			$editValues[] = $request->post->conditionID;
-		}	          
+
+			if($request->post->conditionID!=$taskObj->conditionID) {
+				$logContent[] = [
+					"key"=>"conditionID", 
+					"valueFrom"=>$taskObj->conditionID, 
+					"valueTo"=>strip_tags($request->post->conditionID)					
+				];	
+			}			
+		}	    
 
 		if (isset($request->post->status) && !empty($request->post->status)) {
+
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
-		}	  
+
+			if($request->post->status!=$taskObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$taskObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	               
+
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -303,6 +421,21 @@ class task implements Listable {
 		$sql = Sql::update('task')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "Task";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit Task [".$taskObj->description."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);		
+			}	
+
+
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -326,9 +459,16 @@ class task implements Listable {
 
         $editFields = [];
 		$editValues = [];
+		$logContent = [];
 
 		$editFields['status'] = "?";
 		$editValues[] = 2;		
+
+		$logContent[] = [
+			"key"=>"status", 
+			"valueFrom"=>$taskObj->status, 
+			"valueTo"=>strip_tags(2)					
+		];	
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -340,7 +480,20 @@ class task implements Listable {
 		$sql = Sql::update('task')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
-			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
+						
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Task";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Update";
+			$logData['description'] = "Complete Task [".$taskObj->description."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $editValues;			
+			$logData['changes'] = $logContent;
+			systemLog::add($logData);			
+
+			return new Data(['success'=>true, 'message'=>L('info.updated')]);		
+			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
 		}		        
@@ -481,16 +634,59 @@ class task implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($data['userID']),     
-                strip_tags($data['tpbID']),    
-                strip_tags($data['conditionID']),    
-                strip_tags($data['description']),    
-                strip_tags($data['deadline']),    
-                strip_tags(1)           
-         ])) {
+		$addValues = [
+			strip_tags($data['userID']),     
+			strip_tags($data['tpbID']),    
+			strip_tags($data['conditionID']),    
+			strip_tags($data['description']),    
+			strip_tags($data['deadline']),    
+			strip_tags(1)           
+		];
+
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Task";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Auto Create New Task [".$data['description']."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"userID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($data['userID'])
+					],[
+						"key"=>"tpbID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($data['tpbID'])
+					],[
+						"key"=>"conditionID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($data['conditionID'])
+					],[
+						"key"=>"description", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($data['description'])
+					],[
+						"key"=>"deadline", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($data['deadline'])
+					],[
+						"key"=>"status", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags(1)
+					]
+				];
+
+			systemLog::add($logData);
+
 
 			return true;
 			
@@ -514,16 +710,16 @@ class task implements Listable {
 		$content = "<div class='row'>";    
         
         
-            $content .= formLayout::rowDisplayLineNew(L('tpb.officer'), user::find($obj['userID'])->displayName, 6);
-            $content .= formLayout::rowDisplayLineNew(L('task.deadline'), $obj['deadline'], 6);
+            $content .= formLayout::rowDisplayLineNew(L('tpb.officer'), user::find($obj['userID'])->displayName??"", 6);
+            $content .= formLayout::rowDisplayLineNew(L('task.deadline'), $obj['deadline']??"", 6);
 
-            $content .= formLayout::rowDisplayLineNew(L('task.description'), $obj['description'], 12);
+            $content .= formLayout::rowDisplayLineNew(L('task.description'), $obj['description']??"", 12);
 
-            $content .= formLayout::rowDisplayLineNew(L('tpb.number'), tpb::find($obj['tpbID'])->TPBNo, 6);  
+            $content .= formLayout::rowDisplayLineNew(L('tpb.number'), tpb::find($obj['tpbID'])->TPBNo??"", 6);  
             
-            $content .= formLayout::rowDisplayLineNew(L('tpb.conditionNo'), tpb::getConditionDetail($obj['conditionID'])->conditionNo, 6); 
+            $content .= formLayout::rowDisplayLineNew(L('tpb.conditionNo'), tpb::getConditionDetail($obj['conditionID'])->conditionNo??"", 6); 
 		
-            $content .= formLayout::rowDisplayLineNew(L('Status'), generalStatus::find($obj['status'])->name, 6);
+            $content .= formLayout::rowDisplayLineNew(L('Status'), generalStatus::find($obj['status'])->name??"", 6);
 
 			
 

@@ -53,11 +53,30 @@ class clientType implements Listable {
     public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+		$currentUserObj = unserialize($_SESSION['user']);
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.clientTypeEmptyID')]);	
+
+		$clientTypeObj = self::find($request->get->id);	
+		
+		if(is_null($clientTypeObj))
+			return new Data(['success'=>false, 'message'=>L('error.clientTypeNotFound'), 'field'=>'notice']);		
 			
 		$sql = Sql::delete('clientType')->where(['id', '=', $request->get->id]);
+
+		$logData = [];
+		$logData['userID']= $currentUserObj->id;
+		$logData['module'] = "Client Type";
+		$logData['referenceID'] = $request->get->id;
+		$logData['action'] = "Delete";
+		$logData['description'] = "Delete Client Type [".$clientTypeObj->name."]";
+		$logData['sqlStatement'] = $sql;
+		$logData['sqlValue'] = $request->get->id;
+		$logData['changes'] = [];
+		systemLog::add($logData);
+
 		if ($sql->prepare()->execute()) {
 			return new Data(['success'=>true, 'message'=>L('info.clientTypeDeleted')]);	
 		} else {
@@ -122,11 +141,32 @@ class clientType implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->name),               
-         ])) {
+		$addValues = [
+			strip_tags($request->post->name),               
+	 	];
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Client Type";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New Client Type [".$request->post->name."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"name", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->name)
+					]
+				];
+
+			systemLog::add($logData);			
 
 			return new Data(['success'=>true, 'message'=>L('info.saved')]);
 			
@@ -154,17 +194,37 @@ class clientType implements Listable {
         if (!isset($request->post->name) || empty($request->post->name)) 
             return new Data(['success'=>false, 'message'=>L('error.clientTypeEmptyName'), 'field'=>'name']);
 
-        $editFields = [];
+		$editFields = [];
 		$editValues = [];
+		$logContent = [];
 
 		if (isset($request->post->name) && !empty($request->post->name)) {
+
 			$editFields['name'] = "?";
 			$editValues[] = $request->post->name;
-		}		
+
+			if($request->post->name!=$clientTypeObj->name) {
+				$logContent[] = [
+					"key"=>"name", 
+					"valueFrom"=>$clientTypeObj->name, 
+					"valueTo"=>strip_tags($request->post->name)					
+				];	
+			}			
+		}	
 
 		if (isset($request->post->status) && !empty($request->post->status)) {
+
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
+
+			if($request->post->status!=$clientTypeObj->status) {
+
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$clientTypeObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
 		}	  
         
 		if (count($editFields)) {
@@ -177,6 +237,19 @@ class clientType implements Listable {
 		$sql = Sql::update('clientType')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "Client Type";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit Client Type [".$clientTypeObj->name."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);
+			}
+
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);

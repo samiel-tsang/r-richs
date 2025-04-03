@@ -37,10 +37,14 @@
 <script src="<?php Utility\WebSystem::path("js/kaiadmin/bootstrap-multiselect.js");?>"></script>
 <script src="<?php Utility\WebSystem::path("js/kaiadmin/prettify.min.js");?>"></script>
 
+<!-- Select 2 JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
 <!-- Flatpickr JS -->
 <script src="<?php Utility\WebSystem::path("js/kaiadmin/flatpickr.js");?>"></script>
+<script src="<?php Utility\WebSystem::path("js/kaiadmin/zh.js");?>"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
-<script src="https://npmcdn.com/flatpickr/dist/l10n/zh.js"></script>
+
 
 <!-- Tinymce JS -->
 <script type="text/javascript" src="<?php Utility\WebSystem::path("node_modules/tinymce/tinymce.min.js");?>"></script>
@@ -49,6 +53,36 @@
 var BASE_URL = '<?php Utility\WebSystem::path('');?>';
 
 var lang = "<?=$_SESSION['lang']=='hk'?'zh':'en';?>";
+
+function addMultiSelect() {
+  $('#clientID, #userID, #zoningID, #rntpcID, #tpbID, #conditionID').select2({
+      placeholder: "Select an option",
+      allowClear: true,
+  });
+}
+
+function showLoginNotice(title, content="") {
+
+  if(!content.length) {
+    content = title;
+  }
+
+  swal({
+    title: title,
+    text: content,
+    type: "warning",
+    buttons: {
+        confirm: {
+          text: "<?=L('OK');?>",
+          className: "btn btn-success",
+        }
+    },
+  }).then((willOK) => {
+    if (willOK) {
+        location.reload();          
+    } 
+  });   
+}
 
 function buildTinymce() {
   tinymce.remove();
@@ -66,8 +100,14 @@ function addCalendar() {
   $(".customDateTime").flatpickr({
       enableTime: true,
       dateFormat: "Y-m-d H:i",
-      locale: lang
-  });            
+      locale: 'zh'
+  });  
+
+  $(".customDate").flatpickr({
+      enableTime: false,
+      dateFormat: "Y-m-d",
+      locale: 'zh'
+  });    
 }
 
 function downloadDoc(){
@@ -118,6 +158,9 @@ if(localStorage.getItem("hideSideBar")=="close"){
 
 
 $(function () {
+
+
+   
   $('[data-bs-toggle="tooltip"]').tooltip()
 
   var elem = document.documentElement;
@@ -164,429 +207,6 @@ $(function () {
   }
   */
 
-
-  var tpbTable0 = $("#tpbTable0").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=0',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      });       
-
-      var tpbTable1 = $("#tpbTable1").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=1',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      }); 
-
-      var tpbTable2 = $("#tpbTable2").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=2',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      });  
-
-      var tpbTable3 = $("#tpbTable3").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=3',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      }); 
-
-      var tpbTable4 = $("#tpbTable4").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=4',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      }); 
-
-      var tpbTable5 = $("#tpbTable5").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=5',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      }); 
-
-      var tpbTable6 = $("#tpbTable6").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=6',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      }); 
-
-      var tpbTable7 = $("#tpbTable7").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=7',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      }); 
-
-      var tpbTable8 = $("#tpbTable8").DataTable({
-         pageLength: 10,
-         autoWidth: false,
-         processing: false,
-         serverSide: true,
-         serverMethod: 'post',
-         ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=8',
-            "columns": [
-            { data: 'column_tpbID' },
-            { data: 'column_tpbRefNo' },
-            { data: 'column_tpbClient' },
-            { data: 'column_tpbOfficer' },
-            { data: 'column_tpbSubmissionDate' },
-            { data: 'column_tpbLastUpdateDate' },
-            { data: 'column_tpbNo' },
-            { data: 'column_function' },                   
-         ], 
-         initComplete: function () {
-            this.api()
-            .columns([0,1,2,4,5,6])
-            .every(function () {
-               var column = this;
-               var select = $(
-                  '<select class="form-select"><option value=""></option></select>'
-               )
-                  .appendTo($(column.footer()).empty())
-                  .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                  column
-                     .search(val ? "^" + val + "$" : "", true, false)
-                     .draw();
-                  });
-
-               column
-                  .data()
-                  .unique()
-                  .sort()
-                  .each(function (d, j) {
-                  select.append(
-                     '<option value="' + d + '">' + d + "</option>"
-                  );
-                  });
-            });
-         },
-      }); 
 
       function showConditionCalendar(tpbID) {
 

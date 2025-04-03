@@ -94,7 +94,7 @@ include("view/layout/endpage.php");
             processing: false,
             serverSide: true,
             serverMethod: 'post',
-            ajax: '<?=$request->baseUrl();?>/script/stwList.php',
+            ajax: '<?=$request->baseUrl();?>/script/stwList.php?mode=edit',
             "columns": [
                { data: 'column_stwID' },
                { data: 'column_refNo' },
@@ -132,7 +132,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_stwID'
         });
 
         
@@ -147,7 +147,7 @@ include("view/layout/endpage.php");
                      modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
                      modal.find('.modal-body').html(form_data.content.message);                       
                     
-                    
+                     addMultiSelect();
                      addCalendar();
 
                      $("#addMailingLogRow").click(function(e){
@@ -310,7 +310,17 @@ include("view/layout/endpage.php");
         $('#stwTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "stw/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_stw_detail(button.data('id'));
+
+        });   
+
+        $('#stwTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_stw_detail($(this).parent().attr('id'));                 
+        });            
+        
+        function show_stw_detail(stwID) {
+            ajaxFunc.apiCall("GET", "stw/detail/"+stwID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -336,7 +346,7 @@ include("view/layout/endpage.php");
                            serverSide: true,
                            serverMethod: 'post',
                            autoWidth: false,
-                           ajax: '<?=$request->baseUrl();?>/script/stwMailingLogList.php?mode=view&stwID='+button.data('id'),
+                           ajax: '<?=$request->baseUrl();?>/script/stwMailingLogList.php?mode=view&stwID='+stwID,
                            "columns": [
                               { data: 'column_mailingLogID' },
                               { data: 'column_date' },
@@ -419,8 +429,7 @@ include("view/layout/endpage.php");
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })               
             });
-
-        });           
+        }
         
         $('#stwTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();
@@ -433,6 +442,7 @@ include("view/layout/endpage.php");
                      modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
 
                      modal.find('.modal-body').html(form_data.content.message);
+                     addMultiSelect();
                      addCalendar();
                      removeDoc(); 
                      downloadDoc();  

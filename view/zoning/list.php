@@ -123,7 +123,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_zoningID'
         });
 
         
@@ -183,7 +183,16 @@ include("view/layout/endpage.php");
         $('#zoningTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "zoning/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_zoning_detail(button.data('id'));
+        });
+
+        $('#zoningTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_zoning_detail($(this).parent().attr('id'));                 
+        }); 
+
+        function show_zoning_detail(zoningID) {
+            ajaxFunc.apiCall("GET", "zoning/detail/"+zoningID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('#msgBoxLabel').html("<?=L('View');?> <?=L('tpb.zoning');?> <?=L('Record');?>");
@@ -201,9 +210,8 @@ include("view/layout/endpage.php");
                   downloadDoc();  
                                
                }).modal('show')
-            });
-
-        });
+            });        
+        }
 
         $('#zoningTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();

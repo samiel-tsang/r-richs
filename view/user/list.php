@@ -128,16 +128,17 @@ include("view/layout/endpage.php");
                   });
               });
           },
+          rowId: 'column_userID'
         });
 
         $(".addUserBtn").click(function(e){
             var button = $(e.currentTarget);
             e.preventDefault();
             ajaxFunc.apiCall("GET", "user/formAdd", null, null,  function (form_data) { 
-               $('#msgBox').one('show.bs.modal', function (ev) {
-                  var modal = $(this);
-                  modal.find('#msgBoxLabel').html("<?=L('Add');?> <?=L('Record');?>");
-                  if(form_data.content.success) {
+               if(form_data.content.success) {
+                  $('#msgBox').one('show.bs.modal', function (ev) {
+                     var modal = $(this);
+                     modal.find('#msgBoxLabel').html("<?=L('Add');?> <?=L('Record');?>");                     
                      modal.find('.modal-body').html(form_data.content.message);
                      modal.find('#msgBoxBtnPri').on('click', function (event) {  
                         if(document.getElementById("form-addUser")!==null){    
@@ -157,11 +158,11 @@ include("view/layout/endpage.php");
                                     },
                                  }).then((willOK) => {
                                     if (willOK) {
-                                        //location.reload();  
-                                        userTable.ajax.reload(myCallback, false);   
+                                       //location.reload();  
+                                       userTable.ajax.reload(myCallback, false);   
                                     } 
                                  });    
-                              } else {
+                              } else {                                 
                                  $("#form-addUser").find(".form-group").removeClass("has-error");
                                  $("#form-addUser").find(".form-group").find(".hintHelp").text("");
                                  $("#form-addUser").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
@@ -171,20 +172,28 @@ include("view/layout/endpage.php");
                            });
                         }      
                      });  
-                  } else {
-                     modal.find('.modal-body').html(form_data.content.message);
-                     modal.find('#msgBoxBtnPri').on('click', function (event) {  
-                        $("#msgBox").modal("hide");   
-                     });
-                  }                  
-               }).modal('show')
+                  }).modal('show')
+               } else {
+                  if(form_data.content.note=='signIn'){ 
+                     showLoginNotice(form_data.content.message);
+                  }                         
+               }                                 
             });
         });
 
         $('#userTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
-            var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "user/detail/"+button.data('id'), null, null,  function (form_data) { 
+            var button = $(e.currentTarget);   
+            show_user_detail(button.data('id'));         
+        });
+
+        $('#userTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_user_detail($(this).parent().attr('id'));                 
+        });        
+
+        function show_user_detail(id) {
+            ajaxFunc.apiCall("GET", "user/detail/"+id, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('#msgBoxLabel').html("<?=L('View');?> <?=L('user.info');?> <?=L('Record');?>");
@@ -203,8 +212,7 @@ include("view/layout/endpage.php");
                                
                }).modal('show')
             });
-
-        });
+        }
 
         $('#userTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();
@@ -303,14 +311,10 @@ include("view/layout/endpage.php");
                            }
                         });                          
                      } else {
-                        swal(return_data.content.message, {
-                           icon: "error",
-                           buttons: {
-                              confirm: {
-                                 className: "btn btn-danger",
-                              },
-                           },
-                        });                    
+                        if(return_data.content.note=="signIn") {
+                           console.log("check");
+                           showLoginNotice(return_data.content.message);
+                        }      
                      }
                   });
                } 

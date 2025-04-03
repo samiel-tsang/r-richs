@@ -106,6 +106,7 @@ foreach($stm as $data){
                     <ul class='dropdown-menu' aria-labelledby='btnGroupDrop".$data['logID']."'>
                         <li>
                             <div class='d-grid'>
+                                <button class='btn btn-md btn-outline-dark btnView' type='button' data-id='".$data['logID']."' data-stwid='".$data['stwID']."'><i class='fas fa-sm fa-eye'></i> ".L('View')."</button>                                
                                 <button class='btn btn-md btn-outline-dark btnEdit' type='button' data-id='".$data['logID']."' data-stwid='".$data['stwID']."'><i class='fas fa-sm fa-edit'></i> ".L('Edit')."</button>
                                 <button class='btn btn-md btn-outline-dark btnDel' type='button' data-id='".$data['logID']."'><i class='fas fa-sm fa-trash-alt'></i> ".L('Delete')."</button>
                             </div>

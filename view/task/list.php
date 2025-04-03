@@ -126,7 +126,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_taskID'
         });
 
         
@@ -141,15 +141,8 @@ include("view/layout/endpage.php");
                      //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
                      modal.find('.modal-body').html(form_data.content.message);    
                     
-                    
-                     ajaxFunc.apiCall("GET", "task/variableList", null, null, function(return_variable_data){
-                        if(return_variable_data.content.success) {
-                           return_variable_data.content.message.each
-                           $("#variableList").html(return_variable_data.content.message);
-                        }
-                     });
-                    
                      addCalendar();
+                     addMultiSelect();
 
                      modal.find('#msgBoxBtnPri').off('click');
                      modal.find('#msgBoxBtnPri').on('click', function (event) {  
@@ -203,7 +196,16 @@ include("view/layout/endpage.php");
         $('#taskTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "task/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_task_detail(button.data('id'));
+        });
+
+        $('#taskTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_task_detail($(this).parent().attr('id'));                 
+        });            
+
+        function show_task_detail(taskID) {
+            ajaxFunc.apiCall("GET", "task/detail/"+taskID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -227,8 +229,7 @@ include("view/layout/endpage.php");
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })               
             });
-
-        });
+        }
         
         $('#taskTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();
@@ -241,13 +242,8 @@ include("view/layout/endpage.php");
                      //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
 
                      modal.find('.modal-body').html(form_data.content.message);
-                     addCalendar();
-                     ajaxFunc.apiCall("GET", "task/variableList", null, null, function(return_variable_data){
-                        if(return_variable_data.content.success) {
-                           return_variable_data.content.message.each
-                           $("#variableList").html(return_variable_data.content.message);
-                        }
-                     });                     
+                     addCalendar();            
+                     addMultiSelect();  
                      modal.find('#msgBoxBtnPri').off('click');
                      modal.find('#msgBoxBtnPri').on('click', function (event) {  
                         tinymce.triggerSave();

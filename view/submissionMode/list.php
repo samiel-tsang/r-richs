@@ -122,7 +122,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_submissionModeID'
         });
 
         
@@ -182,7 +182,16 @@ include("view/layout/endpage.php");
         $('#submissionModeTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "submissionMode/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_submission_mode_detail(button.data('id'));
+        });
+
+        $('#submissionModeTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_submission_mode_detail($(this).parent().attr('id'));                 
+        }); 
+        
+        function show_submission_mode_detail(submissionModeID) {
+            ajaxFunc.apiCall("GET", "submissionMode/detail/"+submissionModeID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -206,9 +215,8 @@ include("view/layout/endpage.php");
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })
                */               
-            });
-
-        });        
+            });        
+        }
         
         $('#submissionModeTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();

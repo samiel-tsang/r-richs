@@ -42,12 +42,31 @@ class dbm implements Listable {
     public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+		$currentUserObj = unserialize($_SESSION['user']);			
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.dbmEmptyID')]);	
+
+		$dbmObj = self::find($request->get->id);		
+		
+		if(is_null($dbmObj))
+			return new Data(['success'=>false, 'message'=>L('error.dbmNotFound'), 'field'=>'notice']);					
 			
 		$sql = Sql::delete('dbm')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "DBM";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete DBM [".$dbmObj->scheduleDate."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);
+
 			return new Data(['success'=>true, 'message'=>L('info.dbmDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.dbmDeleteFailed')]);	
@@ -111,11 +130,32 @@ class dbm implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->scheduleDate),               
-         ])) {
+		$addValues = [
+			strip_tags($request->post->scheduleDate),               
+	 	];
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "DBM";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New DBM [".$request->post->scheduleDate."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"scheduleDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->scheduleDate)
+					]
+				];
+
+			systemLog::add($logData);				
 
 			return new Data(['success'=>true, 'message'=>L('info.saved')]);
 			
@@ -136,6 +176,7 @@ class dbm implements Listable {
 			return new Data(['success'=>false, 'message'=>L('error.dbmEmptyID'), 'field'=>'notice']);
 
 		$dbmObj = self::find($request->get->id);
+
 		if(is_null($dbmObj))
 			return new Data(['success'=>false, 'message'=>L('error.dbmNotFound'), 'field'=>'notice']);
 
@@ -143,18 +184,37 @@ class dbm implements Listable {
         if (!isset($request->post->scheduleDate) || empty($request->post->scheduleDate)) 
             return new Data(['success'=>false, 'message'=>L('error.dbmEmptyScheduleDate'), 'field'=>'scheduleDate']);
 
-        $editFields = [];
+		$editFields = [];
 		$editValues = [];
+		$logContent = [];
 
 		if (isset($request->post->scheduleDate) && !empty($request->post->scheduleDate)) {
+
 			$editFields['scheduleDate'] = "?";
 			$editValues[] = $request->post->scheduleDate;
-		}		
+
+			if($request->post->scheduleDate.":00"!=$dbmObj->scheduleDate) {
+				$logContent[] = [
+					"key"=>"scheduleDate", 
+					"valueFrom"=>$dbmObj->scheduleDate, 
+					"valueTo"=>strip_tags($request->post->scheduleDate)					
+				];	
+			}			
+		}	
 
 		if (isset($request->post->status) && !empty($request->post->status)) {
+
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
-		}	  
+
+			if($request->post->status!=$dbmObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$dbmObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	  	
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -166,6 +226,19 @@ class dbm implements Listable {
 		$sql = Sql::update('dbm')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "DBM";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit DBM [".$dbmObj->scheduleDate."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);
+			}
+
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -262,6 +335,7 @@ class dbm implements Listable {
 		
 		foreach($stmAll as $obj) {			
 			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-md btnEdit' data-id='".$obj['id']."'>".$obj['scheduleDate']."</button></div>";
+			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-md btnEdit' data-id='".$obj['id']."'>DBM Scheduled Date</button></div>";			
 			$calendar->addDailyHtml($content, date('Y-m-d', strtotime($obj['scheduleDate'])));	
 		}		
 

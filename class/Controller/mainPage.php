@@ -72,7 +72,8 @@ class mainPage implements Listable {
 		$stmAll->execute();		
 		
 		foreach($stmAll as $obj) {			
-			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-primary btn-sm btnEdit' data-id='".$obj['id']."'>RNTPC Meeting# ".$obj['meetingNo']."<br>".$obj['meetingDate']."</button></div>";
+			//$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-primary btn-sm btnEdit' data-id='".$obj['id']."'>RNTPC Meeting# ".$obj['meetingNo']."<br>".$obj['meetingDate']."</button></div>";
+			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-primary btn-sm btnCalendarEdit' data-type='rntpc' data-id='".$obj['id']."'>RNTPC Meeting# ".$obj['meetingNo']."</button></div>";
 			$calendar->addDailyHtml($content, date('Y-m-d', strtotime($obj['meetingDate'])));	
 		}	
 
@@ -84,7 +85,8 @@ class mainPage implements Listable {
 		$stmAll->execute();		
 		
 		foreach($stmAll as $obj) {			
-			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-warning btn-sm btnEdit' data-id='".$obj['id']."'>DBM Schedule Date<br>".$obj['scheduleDate']."</button></div>";
+			//$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-warning btn-sm btnEdit' data-id='".$obj['id']."'>DBM Schedule Date<br>".$obj['scheduleDate']."</button></div>";
+			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-warning btn-sm btnCalendarEdit' data-type='dbm' data-id='".$obj['id']."'>DBM Schedule Date</button></div>";
 			$calendar->addDailyHtml($content, date('Y-m-d', strtotime($obj['scheduleDate'])));	
 		}	
 		
@@ -96,7 +98,8 @@ class mainPage implements Listable {
 		$stmAll->execute();		
 		
 		foreach($stmAll as $obj) {			
-			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-success btn-sm btnEdit' data-id='".$obj['id']."'>Task: ".$obj['description']."<br>".$obj['deadline']."</button></div>";
+			//$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-success btn-sm btnEdit' data-id='".$obj['id']."'>Task: ".$obj['description']."<br>".$obj['deadline']."</button></div>";
+			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-success btn-sm btnCalendarEdit' data-type='task' data-id='".$obj['id']."'>Task: ".$obj['description']."</button></div>";
 			$calendar->addDailyHtml($content, date('Y-m-d', strtotime($obj['deadline'])));	
 		}	
 		
@@ -108,7 +111,8 @@ class mainPage implements Listable {
 		$stmAll->execute();		
 		
 		foreach($stmAll as $obj) {			
-			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-sm btnEdit' data-id='".$obj['id']."'>TPB#".$obj['TPBNo']."<br>".$obj['approvalValidUntil']."</button></div>";
+			//$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-sm btnEdit' data-id='".$obj['id']."'>TPB#".$obj['TPBNo']."<br>".$obj['approvalValidUntil']."</button></div>";
+			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-sm btnCalendarEdit' data-type='tpb' data-id='".$obj['id']."'>TPB#".$obj['TPBNo']."</button></div>";
 			$calendar->addDailyHtml($content, date('Y-m-d', strtotime($obj['approvalValidUntil'])));	
 		}	
 

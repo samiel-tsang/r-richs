@@ -50,6 +50,38 @@
 	<link href="<?php Utility\WebSystem::path("vendor/donatj/simplecalendar/src/css/SimpleCalendar.css");?>" rel="stylesheet" type="text/css"> 	
 	<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css" rel="stylesheet" type="text/css"> 
 	
+	<style>
+		.select2-container {
+			z-index: 9999;
+		}
+
+        .select2-container--default .select2-selection--multiple {
+            border: 2px solid #ebedf2 !important;
+            border-radius: 4px;
+			padding: .2rem 1rem;
+        }
+
+        .select2-container--default .select2-selection--single {
+            border: 2px solid #ebedf2 !important;
+            border-radius: 4px;
+			height: 40px !important;			
+        }
+
+		.select2-container--default .select2-selection--single .select2-selection__arrow {
+			height: 40px !important;
+			position: absolute;
+			top: 1px;
+			right: 1px;
+			width: 20px;
+		}		
+
+		.select2-container--default .select2-selection--single .select2-selection__rendered {
+			color: #444;
+			line-height: 40px !important;
+		}		
+
+    </style>
+	
 	
 </head>
 <body>

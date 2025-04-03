@@ -123,7 +123,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_emailTemplateID'
         });
 
         
@@ -205,7 +205,16 @@ include("view/layout/endpage.php");
         $('#emailTemplateTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "emailTemplate/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_email_template_detail(button.data('id'));
+        });
+
+        $('#emailTemplateTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_email_template_detail($(this).parent().attr('id'));                 
+        });      
+
+        function show_email_template_detail(emailTemplateID) {
+            ajaxFunc.apiCall("GET", "emailTemplate/detail/"+emailTemplateID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -236,9 +245,8 @@ include("view/layout/endpage.php");
                $('#msgBox').on('hidden.bs.modal', function (e) {
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })               
-            });
-
-        });        
+            });       
+        }
 
         
         $('#emailTemplateTable tbody').on('click', '.btnEdit', function (e) {

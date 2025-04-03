@@ -107,7 +107,6 @@ Route::add('POST', '/api/condition/{id}', 'Controller\tpb@conditionEdit', 'tpb.c
 Route::add('DELETE', '/api/condition/{id}', 'Controller\tpb@conditionDelete', 'tpb.conditionDelete');
 Route::add('GET', '/api/condition/detail/{id}', 'Controller\tpb@conditionDetail', 'tpb.conditionDetail');
 
-
 // TPB single function //
 /*
 Route::add('GET', '/api/tpb/followUpFormEdit/{id}', 'Controller\tpb@followUpTpbForm', 'tpb.followUpTpbFormEdit'); // in page form
@@ -201,6 +200,17 @@ Route::add('GET', '/api/emailTemplate/detail/{id}', 'Controller\emailTemplate@de
 // system setting
 Route::add('POST', '/api/systemSetting', 'Controller\systemSetting@edit', 'systemSetting.edit');
 
+// system log //
+Route::add('GET', '/api/systemLog/detail/{id}', 'Controller\systemLog@detail', 'systemLog.detail');
+Route::add('POST', '/api/systemLog', 'Controller\systemLog@add', 'systemLog.add');
+/*
+Route::add('POST', '/api/systemLog/removeDoc/{id}', 'Controller\systemLog@removeDoc', 'systemLog.removeDoc');
+Route::add('GET', '/api/systemLog/formAdd', 'Controller\systemLog@systemLogForm', 'systemLog.systemLogFormAdd'); // in page form
+Route::add('GET', '/api/systemLog/formEdit/{id}', 'Controller\systemLog@systemLogForm', 'systemLog.systemLogFormEdit'); // in page form
+Route::add('POST', '/api/systemLog/{id}', 'Controller\systemLog@edit', 'systemLog.edit');
+Route::add('DELETE', '/api/systemLog/{id}', 'Controller\systemLog@delete', 'systemLog.delete');
+*/
+
 /* Page Function */
 Route::add('GET', '/', 'Controller\mainPage@login', 'page.login');
 Route::add('GET', '/main', 'Controller\mainPage@main', 'page.dashboard');
@@ -259,3 +269,9 @@ Route::add('GET', '/emailTemplate', 'Controller\emailTemplate@list', 'page.email
 
 // system Setting //
 Route::add('GET', '/systemSetting', 'Controller\systemSetting@list', 'page.systemSettingList');
+
+// system Log //
+Route::add('GET', '/systemLog', 'Controller\systemLog@list', 'page.systemLogList');
+
+// test //
+Route::add('GET', '/test', 'Controller\test@list', 'page.testList');

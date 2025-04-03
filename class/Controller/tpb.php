@@ -22,6 +22,24 @@ class tpb implements Listable {
 		return $obj;
 	}
 
+    public static function findByTPBIDUserID($tpbID, $userID, $fetchMode=\PDO::FETCH_OBJ) {
+		$sql = Sql::select("tpbOfficer")->where(['tpbID', '=', $tpbID])->where(['userID', '=', $userID]);
+		$stm = $sql->prepare();
+		$stm->execute();
+		$obj = $stm->fetch($fetchMode);
+		if ($obj === false) return null;
+		return $obj;
+	}
+
+    public static function findByTPBIDZoningID($tpbID, $zoningID, $fetchMode=\PDO::FETCH_OBJ) {
+		$sql = Sql::select("tpbZoning")->where(['tpbID', '=', $tpbID])->where(['zoningID', '=', $zoningID]);
+		$stm = $sql->prepare();
+		$stm->execute();
+		$obj = $stm->fetch($fetchMode);
+		if ($obj === false) return null;
+		return $obj;
+	}
+
     public static function findAll($condition="", $fetchMode=\PDO::FETCH_OBJ) {
 		$sql = Sql::select("tpb");
 
@@ -125,12 +143,31 @@ class tpb implements Listable {
     public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+        $currentUserObj = unserialize($_SESSION['user']);              
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.tpbEmptyID')]);	
+
+        $tpbObj = self::find($request->get->id);	
+
+        if(is_null($tpbObj))
+            return new Data(['success'=>false, 'message'=>L('error.tpbNotFound'), 'field'=>'notice']);	             
 			
 		$sql = Sql::delete('tpb')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "TPB";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete TPB [ID: ".$tpbObj->id."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);	
+
 			return new Data(['success'=>true, 'message'=>L('info.tpbDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.tpbDeleteFailed')]);	
@@ -140,12 +177,31 @@ class tpb implements Listable {
     public function eotDelete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+        $currentUserObj = unserialize($_SESSION['user']);               
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.eotEmptyID')]);	
-			
+
+        $eotObj = self::getEOTDetail($request->get->id);	
+
+        if(is_null($eotObj))
+            return new Data(['success'=>false, 'message'=>L('error.eotNotFound'), 'field'=>'notice']);	                     
+        
 		$sql = Sql::delete('tpbEOT')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "EOT";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete EOT [ID: ".$eotObj->id."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);	
+
 			return new Data(['success'=>true, 'message'=>L('info.eotDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.eotDeleteFailed')]);	
@@ -155,12 +211,32 @@ class tpb implements Listable {
     public function conditionDelete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
-		
+
+        $currentUserObj = unserialize($_SESSION['user']);
+            
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.conditionEmptyID')]);	
+
+        $conditionObj = self::getConditionDetail($request->get->id);	
+
+        if(is_null($conditionObj))
+            return new Data(['success'=>false, 'message'=>L('error.conditionNotFound'), 'field'=>'notice']);	             
+
 			
 		$sql = Sql::delete('tpbCondition')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Condition";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete Condition [ID: ".$conditionObj->description."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);	
+
 			return new Data(['success'=>true, 'message'=>L('info.conditionDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.conditionDeleteFailed')]);	
@@ -168,9 +244,32 @@ class tpb implements Listable {
 	}      
 
     public static function updateTBPStatus($tpbID, $tpbStatusID) {
+
+        $currentUserObj = unserialize($_SESSION['user']);          
+
         $sql = Sql::update('tpb')->setFieldValue(['tpbStatusID'=>$tpbStatusID])->where(['id', '=', $tpbID]);
 
-		if ($sql->prepare()->execute()) {       
+        $tpbObj = self::find($tpbID);
+
+		if ($sql->prepare()->execute()) {    
+            
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "TPB";
+			$logData['referenceID'] = $tpbID;
+			$logData['action'] = "Update";
+			$logData['description'] = "Update TPB [ID: ".$tpbID."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $tpbStatusID;
+			$logData['changes'] = 				[
+                [
+                    "key"=>"tpbStatusID", 
+                    "valueFrom"=>$tpbObj->tpbStatusID, 
+                    "valueTo"=>strip_tags($tpbStatusID)
+                ]
+            ];
+			systemLog::add($logData);	
+
             return true;
         }
 
@@ -184,8 +283,8 @@ class tpb implements Listable {
         if (!user::checklogin()) return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);
 
 		$formName = "form-addTpb";
-
-        $content = "<form id='".$formName."' class='' autocomplete='off'>";
+        $content = "";        
+        $content .= "<form id='".$formName."' class='' autocomplete='off'>";
 
             $content .= "<div class='row'>";
                 $content .= "<div class='col-md-12'>";
@@ -242,6 +341,7 @@ class tpb implements Listable {
 
                                 // applicant tab
                                 $content .= "<div class='tab-pane tpbAddMenuDiv fade show active' id='pills-applicant' role='tabpanel' aria-labelledby='pills-applicant-tab'>";
+                                
                                     $content .= "<div class='row'>";
 
                                         $option = [""=>"", "Add"=>"[".L('Add')."]"];
@@ -261,8 +361,7 @@ class tpb implements Listable {
                                 $content .= "</div>";
 
                                 // application tab
-                                $content .= "<div class='tab-pane tpbAddMenuDiv fade' id='pills-application' role='tabpanel' aria-labelledby='pills-application-tab'>";
-                                    
+                                $content .= "<div class='tab-pane tpbAddMenuDiv fade' id='pills-application' role='tabpanel' aria-labelledby='pills-application-tab'>";                                
                                     $content .= "<div class='row'>";
                                         $content .= formLayout::rowInputNew(L('tpb.refNo'),'refNo', 'refNo', 'text',  6, [], []);
 
@@ -272,7 +371,9 @@ class tpb implements Listable {
                                         foreach ($stm as $opt) {  
                                             $option[$opt['id']] = $opt['displayName'];			  
                                         }
-                                        $content .= formLayout::rowMultiSelectNew(L('tpb.officer'), 'userID[]', 'userID', $option,  6, [], ['required']); 
+
+                                        
+                                        $content .= formLayout::rowMultiSelectNew(L('tpb.officer'), 'userID[]', 'userID', $option,  6, ['select2'], ['required']); 
                                     
                                         $content .= formLayout::rowInputNew(L('tpb.addressDDLot'),'addressDDLot', 'addressDDLot', 'text',  12, [], []);
                                         $content .= formLayout::rowInputNew(L('tpb.ozpName'),'OZPName', 'OZPName', 'text',  6, [], []);
@@ -285,7 +386,7 @@ class tpb implements Listable {
                                         foreach ($stm as $opt) {  
                                              $option[$opt['id']] = $opt['name'];			  
                                         }
-                                        $content .= formLayout::rowMultiSelectNew(L('tpb.zoning'), 'zoningID[]', 'zoningID', $option,  6, [], []);             
+                                        $content .= formLayout::rowMultiSelectNew(L('tpb.zoning'), 'zoningID[]', 'zoningID', $option,  6, ['select2'], []);             
                                         
                                         $content .= formLayout::rowInputNew(L('tpb.proposedUse'),'proposedUse', 'proposedUse', 'text',  6, [], []);
 
@@ -325,7 +426,7 @@ class tpb implements Listable {
                                 $content .= "<div class='tab-pane tpbAddMenuDiv fade' id='pills-submission' role='tabpanel' aria-labelledby='pills-submission-tab'>";
                                     
                                     $content .= "<div class='row'>";
-                                        $content .= formLayout::rowInputNew(L('tpb.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDateTime'], []);
+                                        $content .= formLayout::rowInputNew(L('tpb.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDate'], []);
                                         $option = [];
                                         $stm = Sql::select('submissionMode')->where(['status', '=', 1])->prepare();
                                         $stm->execute();                                          
@@ -357,8 +458,8 @@ class tpb implements Listable {
                                     $content .= "<div class='row'>";
                                         $content .= formLayout::rowInputNew(L('tpb.number'),'TPBNo', 'TPBNo', 'text',  6, [], []);
                                         $content .= formLayout::rowInputNew(L('tpb.website'),'TPBWebsite', 'TPBWebsite', 'text',  6, [], []);                                    
-                                        $content .= formLayout::rowInputNew(L('tpb.receiveDate'),'TPBReceiveDate', 'TPBReceiveDate', 'text',  6, ['customDateTime'], []);
-                                        $content .= formLayout::rowInputNew(L('tpb.considerationDate'),'tentativeConsiderationDate', 'tentativeConsiderationDate', 'text',  6, ['customDateTime'], []);
+                                        $content .= formLayout::rowInputNew(L('tpb.receiveDate'),'TPBReceiveDate', 'TPBReceiveDate', 'text',  6, ['customDate'], []);
+                                        $content .= formLayout::rowInputNew(L('tpb.considerationDate'),'tentativeConsiderationDate', 'tentativeConsiderationDate', 'text',  6, ['customDate'], []);
                                     $content .= "</div>";             
 
                                 $content .= "</div>";      
@@ -375,8 +476,8 @@ class tpb implements Listable {
                                     }
                                     $content .= formLayout::rowSelectNew(L('tpb.decision'), 'decisionID', 'decisionID', $option, 6, [], []);                                
                             
-                                    $content .= formLayout::rowInputNew(L('tpb.decisionDate'),'decisionDate', 'decisionDate', 'text',  6, ['customDateTime'], []);
-                                    $content .= formLayout::rowInputNew(L('tpb.approvalValidUntil'),'approvalValidUntil', 'approvalValidUntil', 'text',  6, ['customDateTime'], []);
+                                    $content .= formLayout::rowInputNew(L('tpb.decisionDate'),'decisionDate', 'decisionDate', 'text',  6, ['customDate'], []);
+                                    $content .= formLayout::rowInputNew(L('tpb.approvalValidUntil'),'approvalValidUntil', 'approvalValidUntil', 'text',  6, ['customDate'], []);
 
                                         $content .= '<div id="conditionArea">';
                                             $content .= '<div class="row mb-0">';
@@ -431,6 +532,14 @@ class tpb implements Listable {
 
         $content .= "</form>"; // end form
 
+        /* 
+        $content .= "<script>$(document).ready(function() {
+            $('.select2').select2({
+                placeholder: 'Select an option',
+                allowClear: true
+            });
+        });</script>"; */
+        
 
         return new Data(['success'=>true, 'message'=>$content]);
     }
@@ -482,7 +591,7 @@ class tpb implements Listable {
         foreach ($stm as $opt) {  
              $option[$opt['id']] = $opt['username'];			  
         }
-        $content .= formLayout::rowMultiSelectNew(L('tpb.officer'), 'userID[]', 'userID', $option,  6, [], ['required'], empty($obj['userID'])?[]:$obj['userID']);             
+        $content .= formLayout::rowMultiSelectNew(L('tpb.officer'), 'userID[]', 'userID', $option,  6, ['select2'], ['required'], empty($obj['userID'])?[]:$obj['userID']);             
 
         if(!is_null($obj)) {
             $option = [];
@@ -682,34 +791,150 @@ class tpb implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-        if ($sql->prepare()->execute([
-                strip_tags($request->post->refNo),
-                strip_tags($request->post->clientID),
-                strip_tags($request->post->addressDDLot),
-                strip_tags($request->post->OZPName),
-                strip_tags($request->post->OZPNo),
-                strip_tags($request->post->proposedUse),
-                strip_tags($authorizationLetterDocID),
-                strip_tags($request->post->isLandOwner),
-                strip_tags($landRegistryDocID),
-                strip_tags($siteNoticeDocID),
-                strip_tags($letterToRCDocID),
-                strip_tags($request->post->rntpcID),
-                strip_tags($request->post->submissionDate),
-                strip_tags($submissionDocID),
-                strip_tags($request->post->submissionModeID),
-                strip_tags($request->post->remarks),
-                strip_tags($request->post->TPBNo),
-                strip_tags($request->post->TPBWebsite),
-                strip_tags($request->post->TPBReceiveDate),
-                strip_tags($request->post->tentativeConsiderationDate),                
-                strip_tags($request->post->decisionID),
-                strip_tags($request->post->decisionDate),
-                strip_tags($request->post->approvalValidUntil),
-                strip_tags("1")
-            ])) {
+        $addValues = [
+            strip_tags($request->post->refNo),
+            strip_tags($request->post->clientID),
+            strip_tags($request->post->addressDDLot),
+            strip_tags($request->post->OZPName),
+            strip_tags($request->post->OZPNo),
+            strip_tags($request->post->proposedUse),
+            strip_tags($authorizationLetterDocID),
+            strip_tags($request->post->isLandOwner),
+            strip_tags($landRegistryDocID),
+            strip_tags($siteNoticeDocID),
+            strip_tags($letterToRCDocID),
+            strip_tags($request->post->rntpcID),
+            strip_tags($request->post->submissionDate),
+            strip_tags($submissionDocID),
+            strip_tags($request->post->submissionModeID),
+            strip_tags($request->post->remarks),
+            strip_tags($request->post->TPBNo),
+            strip_tags($request->post->TPBWebsite),
+            strip_tags($request->post->TPBReceiveDate),
+            strip_tags($request->post->tentativeConsiderationDate),                
+            strip_tags($request->post->decisionID),
+            strip_tags($request->post->decisionDate),
+            strip_tags($request->post->approvalValidUntil),
+            strip_tags("1")
+        ];
+
+        if ($sql->prepare()->execute($addValues)) {
             
             $tpbID = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "TPB";
+			$logData['referenceID'] = $tpbID;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New TPB [ID: ".$tpbID."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"refNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->refNo)
+                    ],[
+						"key"=>"clientID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->clientID)
+                    ],[
+						"key"=>"addressDDLot", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->addressDDLot)
+                    ],[
+						"key"=>"OZPName", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->OZPName)
+                    ],[
+						"key"=>"OZPNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->OZPNo)
+                    ],[
+						"key"=>"proposedUse", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->proposedUse)
+                    ],[
+						"key"=>"authorizationLetterDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($authorizationLetterDocID)
+                    ],[
+						"key"=>"isLandOwner", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->isLandOwner)
+                    ],[
+						"key"=>"landRegistryDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($landRegistryDocID)
+                    ],[
+						"key"=>"siteNoticeDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($siteNoticeDocID)
+                    ],[
+						"key"=>"letterToRCDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($letterToRCDocID)
+                    ],[
+						"key"=>"rntpcID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->rntpcID)
+                    ],[
+						"key"=>"submissionDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->submissionDate)
+                    ],[
+						"key"=>"submissionDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($submissionDocID)
+                    ],[
+						"key"=>"submissionModeID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->submissionModeID)
+                    ],[
+						"key"=>"remarks", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->remarks)
+                    ],[
+						"key"=>"TPBNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->TPBNo)
+                    ],[
+						"key"=>"TPBWebsite", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->TPBWebsite)
+                    ],[
+						"key"=>"TPBReceiveDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->TPBReceiveDate)
+                    ],[
+						"key"=>"tentativeConsiderationDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->tentativeConsiderationDate)
+                    ],[
+						"key"=>"decisionID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->decisionID)
+                    ],[
+						"key"=>"decisionDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->decisionDate)
+                    ],[
+						"key"=>"approvalValidUntil", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->approvalValidUntil)
+                    ],[
+						"key"=>"tpbStatusID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags(1)
+                    ]
+				];
+
+            systemLog::add($logData);            
+
+
+
 
             // insert tpbOfficer
             foreach($request->post->userID as $officerID) {
@@ -718,10 +943,35 @@ class tpb implements Listable {
                     'userID' => "?"
                 ]);               
 
-                $sql->prepare()->execute([
+                $addOfficerValues = [
                     strip_tags($tpbID),
                     strip_tags($officerID)
-                ]);                
+                ];
+
+                if($sql->prepare()->execute($addOfficerValues)){
+
+                    $id = db()->lastInsertId();
+
+                    $logData = [];
+                    $logData['userID']= $currentUserObj->id;
+                    $logData['module'] = "TPB";
+                    $logData['referenceID'] = $id;
+                    $logData['action'] = "Insert";
+                    $logData['description'] = "Assign Officer to TPB [ID: ".$tpbID."]";
+                    $logData['sqlStatement'] = $sql;
+                    $logData['sqlValue'] = $addOfficerValues;
+                    $logData['changes'] = 
+                        [
+                            [
+                                "key"=>"userID", 
+                                "valueFrom"=>"", 
+                                "valueTo"=>strip_tags($officerID)
+                            ]
+                        ];
+        
+                    systemLog::add($logData);  
+                }
+
             }
 
             // insert tpbZoning
@@ -731,10 +981,33 @@ class tpb implements Listable {
                     'zoningID' => "?"
                 ]);               
 
-                $sql->prepare()->execute([
+                $addZoningValues = [
                     strip_tags($tpbID),
                     strip_tags($zoningID)
-                ]);
+                ];
+
+                if($sql->prepare()->execute($addZoningValues)){
+                    $id = db()->lastInsertId();
+
+                    $logData = [];
+                    $logData['userID']= $currentUserObj->id;
+                    $logData['module'] = "TPB";
+                    $logData['referenceID'] = $id;
+                    $logData['action'] = "Insert";
+                    $logData['description'] = "Assign Zoning to TPB [ID: ".$tpbID."]";
+                    $logData['sqlStatement'] = $sql;
+                    $logData['sqlValue'] = $addZoningValues;
+                    $logData['changes'] = 
+                        [
+                            [
+                                "key"=>"zoningID", 
+                                "valueFrom"=>"", 
+                                "valueTo"=>strip_tags($zoningID)
+                            ]
+                        ];
+        
+                    systemLog::add($logData);                    
+                }
             }     
 
             // insert condition
@@ -749,28 +1022,68 @@ class tpb implements Listable {
                     'modifyBy'=>$currentUserObj->id                    
                 ]);               
 
-                $sql->prepare()->execute([
+                $addConditionValues = [
                     strip_tags($tpbID),
                     strip_tags($request->post->number[$idx]),
                     strip_tags("(TPB ID: ".$tpbID.") ".$description),
                     strip_tags($request->post->deadline[$idx]),
                     strip_tags(1)
-                ]);
+                ];
 
-                $conditionID = db()->lastInsertId();
+                if($sql->prepare()->execute($addConditionValues)){
 
-                // auto create condition task
-                foreach($request->post->userID as $officerID) {
+                    $conditionID = db()->lastInsertId();
 
-                    $conditionArray = [
-                        'userID'=> strip_tags($officerID),
-                        'tpbID'=> strip_tags($tpbID),
-                        'conditionID'=> strip_tags($conditionID),
-                        'description'=> strip_tags("(Condition ID: ".$conditionID.") ".$description),
-                        'deadline'=> strip_tags($request->post->deadline[$idx])
-                    ];             
+
+                    $logData = [];
+                    $logData['userID']= $currentUserObj->id;
+                    $logData['module'] = "TPB";
+                    $logData['referenceID'] = $conditionID;
+                    $logData['action'] = "Insert";
+                    $logData['description'] = "Assign Condition to TPB [ID: ".$tpbID."]";
+                    $logData['sqlStatement'] = $sql;
+                    $logData['sqlValue'] = $addConditionValues;
+                    $logData['changes'] = 
+                        [
+                            [
+                                "key"=>"tpbID", 
+                                "valueFrom"=>"", 
+                                "valueTo"=>strip_tags($tpbID)
+                            ],[
+                                "key"=>"conditionNo", 
+                                "valueFrom"=>"", 
+                                "valueTo"=>strip_tags($request->post->number[$idx])
+                            ],[
+                                "key"=>"description", 
+                                "valueFrom"=>"", 
+                                "valueTo"=>strip_tags("(TPB ID: ".$tpbID.") ".$description)
+                            ],[
+                                "key"=>"deadline", 
+                                "valueFrom"=>"", 
+                                "valueTo"=>strip_tags($request->post->deadline[$idx])
+                            ],[
+                                "key"=>"status", 
+                                "valueFrom"=>"", 
+                                "valueTo"=>strip_tags(1)
+                            ]
+                        ];
         
-                    task::createTask($conditionArray);
+                    systemLog::add($logData);   
+
+                    // auto create condition task
+                    foreach($request->post->userID as $officerID) {
+    
+                        $conditionArray = [
+                            'userID'=> strip_tags($officerID),
+                            'tpbID'=> strip_tags($tpbID),
+                            'conditionID'=> strip_tags($conditionID),
+                            'description'=> strip_tags("(Condition ID: ".$conditionID.") ".$description),
+                            'deadline'=> strip_tags($request->post->deadline[$idx])
+                        ];             
+            
+                        task::createTask($conditionArray);
+                    }
+
                 }
 
             }            
@@ -820,7 +1133,6 @@ class tpb implements Listable {
                     $content .= "</div>";
 
                     $content .= "<div class='card-body'>";
-
                         $content .= "<ul class='nav nav-pills nav-secondary' id='pills-tab-tpbEdit' role='tablist'>";
                             $content .= "<li class='nav-item submenu tpbEditMenu' role='presentation'>";
                                 $content .= "<a class='tpbEditMenuA nav-link active' id='pills-applicant-tab' data-bs-toggle='pill' href='#pills-applicant' role='tab' aria-controls='pills-applicant' aria-selected='false' tabindex='-1'>".L('tpb.applicantDetail')."</a>";
@@ -879,51 +1191,51 @@ class tpb implements Listable {
                                         $content .= "<div class='row' id='tpbSelectedClentDetail'>"; 
 
                                             $content .= "<div class='row'>";
-                                                $content .= formLayout::rowDisplayLineNew(L('client.type'),clientType::find($clientObj->clientTypeID)->name, 6);
-                                                $content .= formLayout::rowDisplayLineNew(L('client.title'),$clientObj->title, 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.type'),clientType::find($clientObj->clientTypeID)->name??"", 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.title'),$clientObj->title??"", 6);
                                             $content .= "</div>";
                                     
                                             $content .= "<div class='row'>";
-                                                $content .= formLayout::rowDisplayLineNew(L('client.contactPerson'),$clientObj->contactPerson, 6);
-                                                $content .= formLayout::rowDisplayLineNew(L('client.position'),$clientObj->position, 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.contactPerson'),$clientObj->contactPerson??"", 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.position'),$clientObj->position??"", 6);
                                             $content .= "</div>";
                                     
                                             $content .= "<div class='row'>";
-                                                $content .= formLayout::rowDisplayLineNew(L('client.phone'),$clientObj->phone, 6);
-                                                $content .= formLayout::rowDisplayLineNew(L('client.email'),$clientObj->email, 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.phone'),$clientObj->phone??"", 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.email'),$clientObj->email??"", 6);
                                             $content .= "</div>";
                                     
                                             $content .= "<div class='row'>";
-                                            $content .= formLayout::rowDisplayLineNew(L('client.idCardNo'),$clientObj->idCardNo, 6);    
+                                            $content .= formLayout::rowDisplayLineNew(L('client.idCardNo'),$clientObj->idCardNo??"", 6);    
                                             if($clientObj->idCardDocID>0) {
                                                 $content .= formLayout::rowDisplayClearLineNew('<div class="d-flex gap-2 btnGrp"><button type="button" class="btn btn-black downloadDoc btn-xs" data-id="'.$clientObj->idCardDocID.'"><i class="fas fa-download"></i></button></div>', 6);           
                                             }
                                             $content .= "</div>";        
                                     
                                             $content .= "<div class='row'>";
-                                                $content .= formLayout::rowDisplayLineNew(L('client.address'),$clientObj->address, 12);            
+                                                $content .= formLayout::rowDisplayLineNew(L('client.address'),$clientObj->address??"", 12);            
                                             $content .= "</div>";            
                                     
                                             $content .= formLayout::rowSeparatorLineNew(12);        
                                     
                                             $content .= "<div class='row'>";
-                                                $content .= formLayout::rowDisplayLineNew(L('client.companyEnglishName'),$clientObj->companyEnglishName, 6);
-                                                $content .= formLayout::rowDisplayLineNew(L('client.companyChineseName'),$clientObj->companyChineseName, 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.companyEnglishName'),$clientObj->companyEnglishName??"", 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.companyChineseName'),$clientObj->companyChineseName??"", 6);
                                             $content .= "</div>";
                                     
                                             $content .= "<div class='row'>";
-                                                $content .= formLayout::rowDisplayLineNew(L('client.companyAddress'),$clientObj->companyAddress, 12);            
+                                                $content .= formLayout::rowDisplayLineNew(L('client.companyAddress'),$clientObj->companyAddress??"", 12);            
                                             $content .= "</div>";  
                                             
                                             $content .= "<div class='row'>";
-                                            $content .= formLayout::rowDisplayLineNew(L('client.CINo'),$clientObj->CINo, 6);
+                                            $content .= formLayout::rowDisplayLineNew(L('client.CINo'),$clientObj->CINo??"", 6);
                                             if($clientObj->CIDocID>0) {
                                                 $content .= formLayout::rowDisplayClearLineNew('<div class="d-flex gap-2 btnGrp"><button type="button" class="btn btn-black downloadDoc btn-xs" data-id="'.$clientObj->CIDocID.'"><i class="fas fa-download"></i></button></div>', 6);           
                                             }       
                                             $content .= "</div>";  
                                     
                                             $content .= "<div class='row'>";
-                                                $content .= formLayout::rowDisplayLineNew(L('client.BRNo'),$clientObj->BRNo, 6);
+                                                $content .= formLayout::rowDisplayLineNew(L('client.BRNo'),$clientObj->BRNo??"", 6);
                                                 if($clientObj->BRDocID>0) {
                                                     $content .= formLayout::rowDisplayClearLineNew('<div class="d-flex gap-2 btnGrp"><button type="button" class="btn btn-black downloadDoc btn-xs" data-id="'.$clientObj->BRDocID.'"><i class="fas fa-download"></i></button></div>', 6);           
                                                 }  
@@ -955,7 +1267,7 @@ class tpb implements Listable {
                                             $option[$opt['id']] = $opt['displayName'];			  
                                         }
                                         
-                                        $content .= formLayout::rowMultiSelectNew(L('tpb.officer'), 'userID[]', 'userID', $option,  6, [], ['required'], $obj['userID']??[]); 
+                                        $content .= formLayout::rowMultiSelectNew(L('tpb.officer'), 'userID[]', 'userID', $option,  6, ['select2'], ['required'], $obj['userID']??[]); 
                                     
                                         $content .= formLayout::rowInputNew(L('tpb.addressDDLot'),'addressDDLot', 'addressDDLot', 'text',  12, [], [], $obj['addressDDLot']??"");
                                         $content .= formLayout::rowInputNew(L('tpb.ozpName'),'OZPName', 'OZPName', 'text',  6, [], [], $obj['OZPName']??"");
@@ -968,7 +1280,7 @@ class tpb implements Listable {
                                         foreach ($stm as $opt) {  
                                             $option[$opt['id']] = $opt['name'];			  
                                         }
-                                        $content .= formLayout::rowMultiSelectNew(L('tpb.zoning'), 'zoningID[]', 'zoningID', $option,  6, [], [], $obj['zoningID']??[]);
+                                        $content .= formLayout::rowMultiSelectNew(L('tpb.zoning'), 'zoningID[]', 'zoningID', $option,  6, ['select2'], [], $obj['zoningID']??[]);
                                         
                                         $content .= formLayout::rowInputNew(L('tpb.proposedUse'),'proposedUse', 'proposedUse', 'text',  6, [], [], $obj['proposedUse']??"");
 
@@ -1050,7 +1362,7 @@ class tpb implements Listable {
                             $content .= "<div class='tab-pane tpbEditMenuDiv fade' id='pills-submission' role='tabpanel' aria-labelledby='pills-submission-tab'>";
                                 $content .= "<form id='form-editTPB-submission' class='' autocomplete='off'>";
                                     $content .= "<div class='row'>";
-                                        $content .= formLayout::rowInputNew(L('tpb.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDateTime'], [], ($obj['submissionDate']=="0000-00-00 00:00:00" || empty($obj['submissionDate'])?"":$obj['submissionDate']));
+                                        $content .= formLayout::rowInputNew(L('tpb.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDate'], [], ($obj['submissionDate']=="0000-00-00" || empty($obj['submissionDate'])?"":$obj['submissionDate']));
                                         $option = [];
                                         $stm = Sql::select('submissionMode')->where(['status', '=', 1])->prepare();
                                         $stm->execute();                                          
@@ -1094,8 +1406,8 @@ class tpb implements Listable {
                                     $content .= "<div class='row'>";
                                         $content .= formLayout::rowInputNew(L('tpb.number'),'TPBNo', 'TPBNo', 'text',  6, [], [], $obj['TPBNo']??"");
                                         $content .= formLayout::rowInputNew(L('tpb.website'),'TPBWebsite', 'TPBWebsite', 'text',  6, [], [], $obj['TPBWebsite']??"");                                    
-                                        $content .= formLayout::rowInputNew(L('tpb.receiveDate'),'TPBReceiveDate', 'TPBReceiveDate', 'text',  6, ['customDateTime'], [], ($obj['TPBReceiveDate']=="0000-00-00 00:00:00" || empty($obj['TPBReceiveDate'])?"":$obj['TPBReceiveDate']));
-                                        $content .= formLayout::rowInputNew(L('tpb.considerationDate'),'tentativeConsiderationDate', 'tentativeConsiderationDate', 'text',  6, ['customDateTime'], [], ($obj['tentativeConsiderationDate']=="0000-00-00 00:00:00" || empty($obj['tentativeConsiderationDate'])?"":$obj['tentativeConsiderationDate']));
+                                        $content .= formLayout::rowInputNew(L('tpb.receiveDate'),'TPBReceiveDate', 'TPBReceiveDate', 'text',  6, ['customDate'], [], ($obj['TPBReceiveDate']=="0000-00-00 00:00:00" || empty($obj['TPBReceiveDate'])?"":$obj['TPBReceiveDate']));
+                                        $content .= formLayout::rowInputNew(L('tpb.considerationDate'),'tentativeConsiderationDate', 'tentativeConsiderationDate', 'text',  6, ['customDate'], [], ($obj['tentativeConsiderationDate']=="0000-00-00 00:00:00" || empty($obj['tentativeConsiderationDate'])?"":$obj['tentativeConsiderationDate']));
                                     $content .= "</div>";      
                                     
                                     $content .= "<div class='row'>";
@@ -1122,8 +1434,8 @@ class tpb implements Listable {
                                         $content .= formLayout::rowSelectNew(L('tpb.decision'), 'decisionID', 'decisionID', $option, 6, [], ['required'], is_null($obj)?'':$obj['decisionID']);
                                     }
                             
-                                        $content .= formLayout::rowInputNew(L('tpb.decisionDate'),'decisionDate', 'decisionDate', 'text',  6, ['customDateTime'], [], ($obj['decisionDate']=="0000-00-00 00:00:00" || empty($obj['decisionDate'])?"":$obj['decisionDate']));
-                                        $content .= formLayout::rowInputNew(L('tpb.approvalValidUntil'),'approvalValidUntil', 'approvalValidUntil', 'text',  6, ['customDateTime'], ['required'], ($obj['approvalValidUntil']=="0000-00-00 00:00:00" || empty($obj['approvalValidUntil'])?"":$obj['approvalValidUntil']));
+                                        $content .= formLayout::rowInputNew(L('tpb.decisionDate'),'decisionDate', 'decisionDate', 'text',  6, ['customDate'], [], ($obj['decisionDate']=="0000-00-00" || empty($obj['decisionDate'])?"":$obj['decisionDate']));
+                                        $content .= formLayout::rowInputNew(L('tpb.approvalValidUntil'),'approvalValidUntil', 'approvalValidUntil', 'text',  6, ['customDate'], ['required'], ($obj['approvalValidUntil']=="0000-00-00" || empty($obj['approvalValidUntil'])?"":$obj['approvalValidUntil']));
                                 
                                     $content .= '</div>';
                                 
@@ -1252,11 +1564,21 @@ class tpb implements Listable {
             
         $editFields = [];
 		$editValues = [];
+        $logContent = [];
         
-		if (isset($request->post->clientID) && !empty($request->post->clientID)) {
-			$editFields['clientID'] = "?";
-			$editValues[] = $request->post->clientID;
-		}	
+        if (isset($request->post->clientID) && !empty($request->post->clientID)) {
+
+            $editFields['clientID'] = "?";
+            $editValues[] = $request->post->clientID;
+
+            if($request->post->clientID!=$tpbObj->clientID) {
+				$logContent[] = [
+					"key"=>"clientID", 
+					"valueFrom"=>$tpbObj->clientID, 
+					"valueTo"=>strip_tags($request->post->clientID)					
+				];	
+			}			
+		}	   
 
         
 		if (count($editFields)) {
@@ -1269,6 +1591,18 @@ class tpb implements Listable {
 		$sql = Sql::update('tpb')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "TPB";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit TPB Applicant Section [ID: ".$tpbObj->id."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);  
+            }
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -1334,14 +1668,21 @@ class tpb implements Listable {
 
         $editFields = [];
 		$editValues = [];
+        $logContent = [];
 
         $authorizationLetterDocID = $tpbObj->authorizationLetterDocID;
 
         if (isset($request->files->authorizationLetterDoc) && !empty($request->files->authorizationLetterDoc)) {
             $authorizationLetterDocID = documentHelper::upload($request->files->authorizationLetterDoc, "AUTHORIZATION_LETTER");
+            $editFields['authorizationLetterDocID'] = "?";
+            $editValues[] = $authorizationLetterDocID;  
+
             if($authorizationLetterDocID>0) {
-                $editFields['authorizationLetterDocID'] = "?";
-                $editValues[] = $authorizationLetterDocID;  
+                $logContent[] = [
+					"key"=>"authorizationLetterDocID", 
+					"valueFrom"=>$tpbObj->authorizationLetterDocID, 
+					"valueTo"=>strip_tags($authorizationLetterDocID)					
+				];	
             }
         }
 
@@ -1349,9 +1690,16 @@ class tpb implements Listable {
 
         if (isset($request->files->landRegistryDoc) && !empty($request->files->landRegistryDoc)) {
             $landRegistryDocID = documentHelper::upload($request->files->landRegistryDoc, "LAND_REGISTRY");
+            $editFields['landRegistryDocID'] = "?";
+            $editValues[] = $landRegistryDocID; 
+
             if($landRegistryDocID>0) {
-                $editFields['landRegistryDocID'] = "?";
-                $editValues[] = $landRegistryDocID;  
+                $logContent[] = [
+					"key"=>"landRegistryDocID", 
+					"valueFrom"=>$tpbObj->landRegistryDocID, 
+					"valueTo"=>strip_tags($landRegistryDocID)					
+				];	
+
             }
         }
 
@@ -1359,9 +1707,15 @@ class tpb implements Listable {
 
         if (isset($request->files->siteNoticeDoc) && !empty($request->files->siteNoticeDoc)) {
             $siteNoticeDocID = documentHelper::upload($request->files->siteNoticeDoc, "SITE_NOTICE");
-            if($siteNoticeDocID>0) {
-                $editFields['siteNoticeDocID'] = "?";
-                $editValues[] = $siteNoticeDocID;  
+            $editFields['siteNoticeDocID'] = "?";
+            $editValues[] = $siteNoticeDocID; 
+
+            if($siteNoticeDocID>0) {               
+                $logContent[] = [
+					"key"=>"siteNoticeDocID", 
+					"valueFrom"=>$tpbObj->siteNoticeDocID, 
+					"valueTo"=>strip_tags($siteNoticeDocID)					
+				];	                
             }
         }
         
@@ -1369,51 +1723,134 @@ class tpb implements Listable {
 
         if (isset($request->files->letterToRCDoc) && !empty($request->files->letterToRCDoc)) {
             $letterToRCDocID = documentHelper::upload($request->files->letterToRCDoc, "LETTER_TO_RC");
+            $editFields['letterToRCDocID'] = "?";
+            $editValues[] = $letterToRCDocID;  
+
             if($letterToRCDocID>0) {
-                $editFields['letterToRCDocID'] = "?";
-                $editValues[] = $letterToRCDocID;  
+                $logContent[] = [
+					"key"=>"letterToRCDocID", 
+					"valueFrom"=>$tpbObj->letterToRCDocID, 
+					"valueTo"=>strip_tags($letterToRCDocID)					
+				];                
             }
         }    
 
-		if (isset($request->post->refNo) && !empty($request->post->refNo)) {
-			$editFields['refNo'] = "?";
-			$editValues[] = $request->post->refNo;
-		}		      
 
-		if (isset($request->post->addressDDLot) && !empty($request->post->addressDDLot)) {
-			$editFields['addressDDLot'] = "?";
-			$editValues[] = $request->post->addressDDLot;
-		}		
-        
-		if (isset($request->post->OZPName) && !empty($request->post->OZPName)) {
-			$editFields['OZPName'] = "?";
-			$editValues[] = $request->post->OZPName;
-		}		
-        
-		if (isset($request->post->OZPNo) && !empty($request->post->OZPNo)) {
-			$editFields['OZPNo'] = "?";
-			$editValues[] = $request->post->OZPNo;
-		}	        
+        if (isset($request->post->refNo) && !empty($request->post->refNo)) {
 
-        if (isset($request->post->proposedUse) && !empty($request->post->proposedUse)) {
-			$editFields['proposedUse'] = "?";
-			$editValues[] = $request->post->proposedUse;
-		}	      
+            $editFields['refNo'] = "?";
+            $editValues[] = $request->post->refNo;
 
-        if (isset($request->post->isLandOwner) && !empty($request->post->isLandOwner)) {
-			$editFields['isLandOwner'] = "?";
-			$editValues[] = $request->post->isLandOwner;
-		}
-
-        if (isset($request->post->remarks) && !empty($request->post->remarks)) {
-			$editFields['remarks'] = "?";
-			$editValues[] = $request->post->remarks;
+            if($request->post->refNo!=$tpbObj->refNo) {
+				$logContent[] = [
+					"key"=>"refNo", 
+					"valueFrom"=>$tpbObj->refNo, 
+					"valueTo"=>strip_tags($request->post->refNo)					
+				];	
+			}			
 		}	
 
+        if (isset($request->post->addressDDLot) && !empty($request->post->addressDDLot)) {
+
+            $editFields['addressDDLot'] = "?";
+            $editValues[] = $request->post->addressDDLot;
+
+            if($request->post->addressDDLot!=$tpbObj->addressDDLot) {
+				$logContent[] = [
+					"key"=>"addressDDLot", 
+					"valueFrom"=>$tpbObj->addressDDLot, 
+					"valueTo"=>strip_tags($request->post->addressDDLot)					
+				];	
+			}			
+		}	
+
+        if (isset($request->post->OZPName) && !empty($request->post->OZPName)) {
+
+            $editFields['OZPName'] = "?";
+            $editValues[] = $request->post->OZPName;
+
+            if($request->post->OZPName!=$tpbObj->OZPName) {
+				$logContent[] = [
+					"key"=>"OZPName", 
+					"valueFrom"=>$tpbObj->OZPName, 
+					"valueTo"=>strip_tags($request->post->OZPName)					
+				];	
+			}			
+		}	
+
+
+        if (isset($request->post->OZPNo) && !empty($request->post->OZPNo)) {
+
+            $editFields['OZPNo'] = "?";
+            $editValues[] = $request->post->OZPNo;
+
+            if($request->post->OZPNo!=$tpbObj->OZPNo) {
+				$logContent[] = [
+					"key"=>"OZPNo", 
+					"valueFrom"=>$tpbObj->OZPNo, 
+					"valueTo"=>strip_tags($request->post->OZPNo)					
+				];	
+			}			
+		}	
+
+        if (isset($request->post->proposedUse) && !empty($request->post->proposedUse)) {
+
+            $editFields['proposedUse'] = "?";
+            $editValues[] = $request->post->proposedUse;
+
+            if($request->post->proposedUse!=$tpbObj->proposedUse) {
+				$logContent[] = [
+					"key"=>"proposedUse", 
+					"valueFrom"=>$tpbObj->proposedUse, 
+					"valueTo"=>strip_tags($request->post->proposedUse)					
+				];	
+			}			
+		}	
+        
+        if (isset($request->post->isLandOwner) && !empty($request->post->isLandOwner)) {
+
+            $editFields['isLandOwner'] = "?";
+            $editValues[] = $request->post->isLandOwner;
+
+            if($request->post->isLandOwner!=$tpbObj->isLandOwner) {
+				$logContent[] = [
+					"key"=>"isLandOwner", 
+					"valueFrom"=>$tpbObj->isLandOwner, 
+					"valueTo"=>strip_tags($request->post->isLandOwner)					
+				];	
+			}			
+		}	       
+
+
+        if (isset($request->post->remarks) && !empty($request->post->remarks)) {
+
+            $editFields['remarks'] = "?";
+            $editValues[] = $request->post->remarks;
+
+            if($request->post->remarks!=$tpbObj->remarks) {
+				$logContent[] = [
+					"key"=>"remarks", 
+					"valueFrom"=>$tpbObj->remarks, 
+					"valueTo"=>strip_tags($request->post->remarks)					
+				];	
+			}			
+		}	  
+
+
         if (isset($request->post->tpbStatusID) && !empty($request->post->tpbStatusID)) {
-			$editFields['tpbStatusID'] = "?";
-			$editValues[] = $request->post->tpbStatusID;
-		}	   
+
+            $editFields['tpbStatusID'] = "?";
+            $editValues[] = $request->post->tpbStatusID;
+
+            if($request->post->tpbStatusID!=$tpbObj->tpbStatusID) {
+				$logContent[] = [
+					"key"=>"tpbStatusID", 
+					"valueFrom"=>$tpbObj->tpbStatusID, 
+					"valueTo"=>strip_tags($request->post->tpbStatusID)					
+				];	
+			}			
+		}	  	
+  
 
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -1423,22 +1860,152 @@ class tpb implements Listable {
 		$sql = Sql::update('tpb')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "TPB";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit TPB Application Section [ID: ".$tpbObj->id."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData); 
+            }       
 
+            $currentOfficer = [];
+			foreach(self::findOfficer($request->get->id) as $officerObj){
+				$currentOfficer[] = $officerObj['userID'];
+			}
 
-            $sql = Sql::delete('tpbOfficer')->where(['tpbID', '=', $request->get->id]);
-            $sql->prepare()->execute();
+            $newOfficer = array_diff($request->post->userID, $currentOfficer);
 
-            foreach($request->post->userID as $officerID) {
+            foreach($newOfficer as $officerID) {
+				
                 $sql = Sql::insert('tpbOfficer')->setFieldValue([
                     'tpbID' => "?", 
                     'userID' => "?"
-                ]);               
-
-                $sql->prepare()->execute([
+                ]);				
+				
+				$addOfficerValues = [
                     strip_tags($request->get->id),
                     strip_tags($officerID)
-                ]);
-            }
+                ];
+
+                $sql->prepare()->execute($addOfficerValues);
+
+				$id = db()->lastInsertId();
+
+				$logOfficerData = [];
+				$logOfficerData['userID']= $currentUserObj->id;
+				$logOfficerData['module'] = "TPB";
+				$logOfficerData['referenceID'] = $id;
+				$logOfficerData['action'] = "Insert";
+                $logOfficerData['description'] = "Assigned Officer To TPB [ID: ".$tpbObj->id."]";
+                $logOfficerData['sqlStatement'] = $sql;
+                $logOfficerData['sqlValue'] = $addOfficerValues;
+				$logOfficerData['changes'] = 
+					[
+						[
+							"key"=>"userID", 
+							"valueFrom"=>"", 
+							"valueTo"=>strip_tags($officerID)
+						]
+					];
+	
+				systemLog::add($logOfficerData);
+
+            }             
+
+			$removeOfficer = array_diff($currentOfficer, $request->post->userID);
+			foreach($removeOfficer as $officerID) {
+
+				$officerObj = self::findByTPBIDUserID($request->get->id, $officerID);
+
+				$sql = Sql::delete('tpbOfficer')->where(['id', '=', $officerObj->id]);
+				if ($sql->prepare()->execute()) {		
+					$logData = [];
+					$logData['userID']= $currentUserObj->id;
+					$logData['module'] = "TPB";
+					$logData['referenceID'] = $officerObj->id;
+					$logData['action'] = "Delete";
+					$logData['description'] = "Remove Assigned Officer From TPB [ID: ".$tpbObj->id."]";
+					$logData['sqlStatement'] = $sql;
+					$logData['sqlValue'] = $request->get->id;
+					$logData['changes'] = [];
+					systemLog::add($logData);	
+				} 				
+
+			}
+
+
+
+
+
+            $currentZoning = [];
+			foreach(self::findZoning($request->get->id) as $zoningObj){
+				$currentZoning[] = $zoningObj['zoningID'];
+			}
+
+            $newZoning = array_diff($request->post->zoningID, $currentZoning);
+
+            foreach($newZoning as $zoningID) {
+				
+                $sql = Sql::insert('tpbZoning')->setFieldValue([
+                    'tpbID' => "?", 
+                    'zoningID' => "?"
+                ]);				
+				
+				$addZoningValues = [
+                    strip_tags($request->get->id),
+                    strip_tags($zoningID)
+                ];
+
+                $sql->prepare()->execute($addZoningValues);
+
+				$id = db()->lastInsertId();
+
+				$logZoningData = [];
+				$logZoningData['userID']= $currentUserObj->id;
+				$logZoningData['module'] = "TPB";
+				$logZoningData['referenceID'] = $id;
+				$logZoningData['action'] = "Insert";
+                $logZoningData['description'] = "Assigned Zoning To TPB [ID: ".$tpbObj->id."]";
+                $logZoningData['sqlStatement'] = $sql;
+                $logZoningData['sqlValue'] = $addZoningValues;
+				$logZoningData['changes'] = 
+					[
+						[
+							"key"=>"zoningID", 
+							"valueFrom"=>"", 
+							"valueTo"=>strip_tags($zoningID)
+						]
+					];
+	
+				systemLog::add($logZoningData);
+
+            }             
+
+			$removeZoning = array_diff($currentZoning, $request->post->zoningID);
+			foreach($removeZoning as $zoningID) {
+
+				$zoningObj = self::findByTPBIDZoningID($request->get->id, $officerID);
+
+				$sql = Sql::delete('tpbZoning')->where(['id', '=', $officerObj->id]);
+				if ($sql->prepare()->execute()) {		
+					$logData = [];
+					$logData['userID']= $currentUserObj->id;
+					$logData['module'] = "TPB";
+					$logData['referenceID'] = $zoningObj->id;
+					$logData['action'] = "Delete";
+					$logData['description'] = "Remove Assigned Zoning From TPB [ID: ".$tpbObj->id."]";
+					$logData['sqlStatement'] = $sql;
+					$logData['sqlValue'] = $request->get->id;
+					$logData['changes'] = [];
+					systemLog::add($logData);	
+				} 				
+
+			}
 
 			return new Data([
                 'success'=>true, 
@@ -1485,31 +2052,66 @@ class tpb implements Listable {
 
         $editFields = [];
         $editValues = [];
+        $logContent = [];
 
         $submissionDocID = $tpbObj->submissionDocID;
 
         if (isset($request->files->submissionDoc) && !empty($request->files->submissionDoc)) {
             $submissionDocID = documentHelper::upload($request->files->submissionDoc, "SUBMISSION");
+            $editFields['submissionDocID'] = "?";
+            $editValues[] = $submissionDocID;  
+
             if($submissionDocID>0) {
-                $editFields['submissionDocID'] = "?";
-                $editValues[] = $submissionDocID;  
+				$logContent[] = [
+					"key"=>"submissionDocID", 
+					"valueFrom"=>$tpbObj->submissionDocID, 
+					"valueTo"=>strip_tags($submissionDocID)					
+				];	                
             }
         }
 
+
         if (isset($request->post->rntpcID) && !empty($request->post->rntpcID)) {
-			$editFields['rntpcID'] = "?";
-			$editValues[] = $request->post->rntpcID;
-		}	 
 
+            $editFields['rntpcID'] = "?";
+            $editValues[] = $request->post->rntpcID;
+
+            if($request->post->rntpcID!=$tpbObj->rntpcID) {
+				$logContent[] = [
+					"key"=>"rntpcID", 
+					"valueFrom"=>$tpbObj->rntpcID, 
+					"valueTo"=>strip_tags($request->post->rntpcID)					
+				];	
+			}			
+		}	   
+        
         if (isset($request->post->submissionDate) && !empty($request->post->submissionDate)) {
-			$editFields['submissionDate'] = "?";
-			$editValues[] = $request->post->submissionDate;
-		}	
 
+            $editFields['submissionDate'] = "?";
+            $editValues[] = $request->post->submissionDate;
+
+            if($request->post->submissionDate!=$tpbObj->submissionDate) {
+				$logContent[] = [
+					"key"=>"submissionDate", 
+					"valueFrom"=>$tpbObj->submissionDate, 
+					"valueTo"=>strip_tags($request->post->submissionDate)					
+				];	
+			}			
+		}	 
+        
         if (isset($request->post->submissionModeID) && !empty($request->post->submissionModeID)) {
-			$editFields['submissionModeID'] = "?";
-			$editValues[] = $request->post->submissionModeID;
-		}	        
+
+            $editFields['submissionModeID'] = "?";
+            $editValues[] = $request->post->submissionModeID;
+
+            if($request->post->submissionModeID!=$tpbObj->submissionModeID) {
+				$logContent[] = [
+					"key"=>"submissionModeID", 
+					"valueFrom"=>$tpbObj->submissionModeID, 
+					"valueTo"=>strip_tags($request->post->submissionModeID)					
+				];	
+			}			
+		}	                
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -1521,6 +2123,18 @@ class tpb implements Listable {
 		$sql = Sql::update('tpb')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "TPB";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit TPB Submission Section [ID: ".$tpbObj->id."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);  
+            }
 			return new Data(['success'=>true, 'message'=>L('info.updated'), 'submissionDocID'=>$submissionDocID, 'submissionDocPath'=>documentHelper::find($submissionDocID)->downloadPath]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -1539,6 +2153,7 @@ class tpb implements Listable {
             return new Data(['success'=>false, 'message'=>L('error.tpbEmptyID'), 'field'=>'notice']);
 
         $tpbObj = self::find($request->get->id);
+
         if(is_null($tpbObj))
             return new Data(['success'=>false, 'message'=>L('error.tpbNotFound'), 'field'=>'notice']);     
         
@@ -1561,27 +2176,64 @@ class tpb implements Listable {
         
         $editFields = [];
 		$editValues = [];
+        $logContent = [];
 
-		if (isset($request->post->TPBNo) && !empty($request->post->TPBNo)) {
-			$editFields['TPBNo'] = "?";
-			$editValues[] = $request->post->TPBNo;
-		}		
+        if (isset($request->post->TPBNo) && !empty($request->post->TPBNo)) {
+
+            $editFields['TPBNo'] = "?";
+            $editValues[] = $request->post->TPBNo;
+
+            if($request->post->TPBNo!=$tpbObj->TPBNo) {
+				$logContent[] = [
+					"key"=>"TPBNo", 
+					"valueFrom"=>$tpbObj->TPBNo, 
+					"valueTo"=>strip_tags($request->post->TPBNo)					
+				];	
+			}			
+		}	     
+
+        if (isset($request->post->TPBWebsite) && !empty($request->post->TPBWebsite)) {
+
+            $editFields['TPBWebsite'] = "?";
+            $editValues[] = $request->post->TPBWebsite;
+
+            if($request->post->TPBWebsite!=$tpbObj->TPBWebsite) {
+				$logContent[] = [
+					"key"=>"TPBWebsite", 
+					"valueFrom"=>$tpbObj->TPBWebsite, 
+					"valueTo"=>strip_tags($request->post->TPBWebsite)					
+				];	
+			}			
+		}	
+	
+        if (isset($request->post->TPBReceiveDate) && !empty($request->post->TPBReceiveDate)) {
+
+            $editFields['TPBReceiveDate'] = "?";
+            $editValues[] = $request->post->TPBReceiveDate;
+
+            if($request->post->TPBReceiveDate!=$tpbObj->TPBReceiveDate) {
+				$logContent[] = [
+					"key"=>"TPBReceiveDate", 
+					"valueFrom"=>$tpbObj->TPBReceiveDate, 
+					"valueTo"=>strip_tags($request->post->TPBReceiveDate)					
+				];	
+			}			
+		}	
         
-		if (isset($request->post->TPBWebsite) && !empty($request->post->TPBWebsite)) {
-			$editFields['TPBWebsite'] = "?";
-			$editValues[] = $request->post->TPBWebsite;
-		}		
-        
-		if (isset($request->post->TPBReceiveDate) && !empty($request->post->TPBReceiveDate)) {
-			$editFields['TPBReceiveDate'] = "?";
-			$editValues[] = $request->post->TPBReceiveDate;
+        if (isset($request->post->tentativeConsiderationDate) && !empty($request->post->tentativeConsiderationDate)) {
+
+            $editFields['tentativeConsiderationDate'] = "?";
+            $editValues[] = $request->post->tentativeConsiderationDate;
+
+            if($request->post->tentativeConsiderationDate!=$tpbObj->tentativeConsiderationDate) {
+				$logContent[] = [
+					"key"=>"tentativeConsiderationDate", 
+					"valueFrom"=>$tpbObj->tentativeConsiderationDate, 
+					"valueTo"=>strip_tags($request->post->tentativeConsiderationDate)					
+				];	
+			}			
 		}	        
 
-        if (isset($request->post->tentativeConsiderationDate) && !empty($request->post->tentativeConsiderationDate)) {
-			$editFields['tentativeConsiderationDate'] = "?";
-			$editValues[] = $request->post->tentativeConsiderationDate;
-		}      
-        
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
 			$editFields['modifyBy'] = $currentUserObj->id;
@@ -1592,6 +2244,18 @@ class tpb implements Listable {
 		$sql = Sql::update('tpb')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "TPB";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit TPB Receive Section [ID: ".$tpbObj->id."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);    
+            }
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -1610,6 +2274,7 @@ class tpb implements Listable {
             return new Data(['success'=>false, 'message'=>L('error.tpbEmptyID'), 'field'=>'notice']);
 
         $tpbObj = self::find($request->get->id);
+
         if(is_null($tpbObj))
             return new Data(['success'=>false, 'message'=>L('error.tpbNotFound'), 'field'=>'notice']);     
         
@@ -1643,21 +2308,52 @@ class tpb implements Listable {
         
         $editFields = [];
 		$editValues = [];
+		$logContent = [];	
 
-		if (isset($request->post->decisionID) && !empty($request->post->decisionID)) {
-			$editFields['decisionID'] = "?";
-			$editValues[] = $request->post->decisionID;
-		}		
-        
-		if (isset($request->post->decisionDate) && !empty($request->post->decisionDate)) {
-			$editFields['decisionDate'] = "?";
-			$editValues[] = $request->post->decisionDate;
-		}		
-        
-		if (isset($request->post->approvalValidUntil) && !empty($request->post->approvalValidUntil)) {
-			$editFields['approvalValidUntil'] = "?";
-			$editValues[] = $request->post->approvalValidUntil;
-		}	    
+        if (isset($request->post->decisionID) && !empty($request->post->decisionID)) {
+
+            $editFields['decisionID'] = "?";
+            $editValues[] = $request->post->decisionID;
+
+            if($request->post->decisionID!=$tpbObj->decisionID) {
+				$logContent[] = [
+					"key"=>"decisionID", 
+					"valueFrom"=>$tpbObj->decisionID, 
+					"valueTo"=>strip_tags($request->post->decisionID)					
+				];	
+			}			
+		}	
+
+
+        if (isset($request->post->decisionDate) && !empty($request->post->decisionDate)) {
+
+            $editFields['decisionDate'] = "?";
+            $editValues[] = $request->post->decisionDate;
+
+            if($request->post->decisionDate!=$tpbObj->decisionDate) {
+				$logContent[] = [
+					"key"=>"decisionDate", 
+					"valueFrom"=>$tpbObj->decisionDate, 
+					"valueTo"=>strip_tags($request->post->decisionDate)					
+				];	
+			}			
+		}	
+
+
+        if (isset($request->post->approvalValidUntil) && !empty($request->post->approvalValidUntil)) {
+
+            $editFields['approvalValidUntil'] = "?";
+            $editValues[] = $request->post->approvalValidUntil;
+
+            if($request->post->approvalValidUntil!=$tpbObj->approvalValidUntil) {
+				$logContent[] = [
+					"key"=>"approvalValidUntil", 
+					"valueFrom"=>$tpbObj->approvalValidUntil, 
+					"valueTo"=>strip_tags($request->post->approvalValidUntil)					
+				];	
+			}			
+		}	
+
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -1669,6 +2365,18 @@ class tpb implements Listable {
 		$sql = Sql::update('tpb')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "TPB";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit TPB Decision Section [ID: ".$tpbObj->id."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);            
+            }
 
             if($request->post->decisionID=="1") {
                 self::updateTBPStatus($request->get->id, 5);
@@ -1840,7 +2548,7 @@ class tpb implements Listable {
                 foreach ($stm as $opt) {  
                     $option[$opt['id']] = "#".$opt['conditionNo'].": ".$opt['description']." - [".$opt['deadline']."]";			  
                 }
-                $content .= formLayout::rowMultiSelectNew(L('tpb.condition'), 'conditionID[]', 'conditionID', $option,  12, [], ['required']); 
+                $content .= formLayout::rowMultiSelectNew(L('tpb.condition'), 'conditionID[]', 'conditionID', $option,  12, ['select2'], ['required']); 
 
 
                 $content .= formLayout::rowInputNew(L('eot.extendMonth'),'extendMonth', 'extendMonth', 'text',  6, [], ['required']);               
@@ -1848,7 +2556,7 @@ class tpb implements Listable {
 
                 $content .= formLayout::rowTextAreaNew(L('eot.reason'), 'reason', 'reason',  12, [], []);
 
-                $content .= formLayout::rowInputNew(L('eot.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDateTime'], []);  
+                $content .= formLayout::rowInputNew(L('eot.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDate'], []);  
 
 
                 $option = [""=>""];
@@ -1925,7 +2633,7 @@ class tpb implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-        if ($sql->prepare()->execute([
+        $addValues = [
             strip_tags($request->post->tpbID),
             strip_tags(json_encode($request->post->conditionID)),
             strip_tags($request->post->extendMonth),
@@ -1934,8 +2642,58 @@ class tpb implements Listable {
             strip_tags($request->post->submissionModeID),
             strip_tags($EOTDocID),
             strip_tags($request->post->status),
-        ])) {    
-            $eotID = db()->lastInsertId();            
+        ];
+
+        if ($sql->prepare()->execute($addValues)) {    
+            $eotID = db()->lastInsertId();   
+            
+            $logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "EOT";
+			$logData['referenceID'] = $eotID;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New EOT [ID: ".$eotID."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"tpbID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->tpbID)
+                    ],[
+						"key"=>"conditionID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags(json_encode($request->post->conditionID))
+                    ],[
+						"key"=>"extendMonth", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->extendMonth)
+                    ],[
+						"key"=>"reason", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->reason)
+                    ],[
+						"key"=>"submissionDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->submissionDate)
+                    ],[
+						"key"=>"submissionModeID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->submissionModeID)
+                    ],[
+						"key"=>"EOTDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($EOTDocID)
+                    ],[
+						"key"=>"status", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->status)
+                    ]
+				];
+
+			systemLog::add($logData);  
+
             return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$eotID]);
         } else {
             return new Data(['success'=>false, 'message'=>L('error.unableInsert'), 'field'=>'notice']);
@@ -1977,13 +2735,13 @@ class tpb implements Listable {
                     $option[$opt['id']] = "#".$opt['conditionNo'].": ".$opt['description']." - [".$opt['deadline']."]";			  
                 }
                
-                $content .= formLayout::rowMultiSelectNew(L('tpb.condition'), 'conditionID[]', 'conditionID', $option,  12, [], ['required'], is_null($obj)?[]:$obj['conditions']); 
+                $content .= formLayout::rowMultiSelectNew(L('tpb.condition'), 'conditionID[]', 'conditionID', $option,  12, ['select2'], ['required'], is_null($obj)?[]:$obj['conditions']); 
 
                 $content .= formLayout::rowInputNew(L('eot.extendMonth'),'extendMonth', 'extendMonth', 'text',  6, [], ['required'], is_null($obj)?'':$obj['extendMonth']);               
 
                 $content .= formLayout::rowTextAreaNew(L('eot.reason'), 'reason', 'reason',  12, [], [], is_null($obj)?'':$obj['reason']);
 
-                $content .= formLayout::rowInputNew(L('eot.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDateTime'], [], ($obj['submissionDate']=="0000-00-00 00:00:00" || empty($obj['submissionDate'])?"":$obj['submissionDate']));  
+                $content .= formLayout::rowInputNew(L('eot.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDate'], [], ($obj['submissionDate']=="0000-00-00" || empty($obj['submissionDate'])?"":$obj['submissionDate']));  
 
 
                 $option = [""=>""];
@@ -2054,49 +2812,112 @@ class tpb implements Listable {
         if (!isset($request->post->submissionModeID) || empty($request->post->submissionModeID)) 
             return new Data(['success'=>false, 'message'=>L('error.eotEmptySubmissionMode'), 'field'=>'submissionModeID', 'tab'=>'pills-EOT']);                   
         */              
-        // file upload
-        $editFields = [];
-        $editValues = [];
 
+        $editFields = [];
+		$editValues = [];
+		$logContent = [];	
+
+        // file upload        
         $EOTDocID = $eotObj->EOTDocID;
 
         if (isset($request->files->EOTDoc) && !empty($request->files->EOTDoc)) {
             $EOTDocID = documentHelper::upload($request->files->EOTDoc, "EOT");
+            $editFields['EOTDocID'] = "?";
+            $editValues[] = $EOTDocID;  
+
             if($EOTDocID>0) {
-                $editFields['EOTDocID'] = "?";
-                $editValues[] = $EOTDocID;  
+				$logContent[] = [
+					"key"=>"EOTDocID", 
+					"valueFrom"=>$eotObj->EOTDocID, 
+					"valueTo"=>strip_tags($EOTDocID)					
+				];	                
             }
         }
 
         if (isset($request->post->conditionID) && !empty($request->post->conditionID)) {
-			$editFields['conditionID'] = "?";
-			$editValues[] = json_encode($request->post->conditionID);
-		}	         
 
-        if (isset($request->post->extendMonth) && !empty($request->post->extendMonth)) {
-			$editFields['extendMonth'] = "?";
-			$editValues[] = $request->post->extendMonth;
+            $editFields['conditionID'] = "?";
+            $editValues[] = json_encode($request->post->conditionID);
+
+            if($request->post->conditionID!=$eotObj->conditionID) {
+				$logContent[] = [
+					"key"=>"conditionID", 
+					"valueFrom"=>$eotObj->conditionID, 
+					"valueTo"=>strip_tags(json_encode($request->post->conditionID))					
+				];	
+			}			
 		}	 
 
+        if (isset($request->post->extendMonth) && !empty($request->post->extendMonth)) {
+
+            $editFields['extendMonth'] = "?";
+            $editValues[] = $request->post->extendMonth;
+
+            if($request->post->extendMonth!=$eotObj->extendMonth) {
+				$logContent[] = [
+					"key"=>"extendMonth", 
+					"valueFrom"=>$eotObj->extendMonth, 
+					"valueTo"=>strip_tags($request->post->extendMonth)					
+				];	
+			}			
+		}	
+
         if (isset($request->post->reason) && !empty($request->post->reason)) {
-			$editFields['reason'] = "?";
-			$editValues[] = $request->post->reason;
+
+            $editFields['reason'] = "?";
+            $editValues[] = $request->post->reason;
+
+            if($request->post->reason!=$eotObj->reason) {
+				$logContent[] = [
+					"key"=>"reason", 
+					"valueFrom"=>$eotObj->reason, 
+					"valueTo"=>strip_tags($request->post->reason)					
+				];	
+			}			
 		}	
 
         if (isset($request->post->submissionDate) && !empty($request->post->submissionDate)) {
-			$editFields['submissionDate'] = "?";
-			$editValues[] = $request->post->submissionDate;
-		}	        
+
+            $editFields['submissionDate'] = "?";
+            $editValues[] = $request->post->submissionDate;
+
+            if($request->post->submissionDate!=$eotObj->submissionDate) {
+				$logContent[] = [
+					"key"=>"submissionDate", 
+					"valueFrom"=>$eotObj->submissionDate, 
+					"valueTo"=>strip_tags($request->post->submissionDate)					
+				];	
+			}			
+		}	
 
         if (isset($request->post->submissionModeID) && !empty($request->post->submissionModeID)) {
-			$editFields['submissionModeID'] = "?";
-			$editValues[] = $request->post->submissionModeID;
+
+            $editFields['submissionModeID'] = "?";
+            $editValues[] = $request->post->submissionModeID;
+
+            if($request->post->submissionModeID!=$eotObj->submissionModeID) {
+				$logContent[] = [
+					"key"=>"submissionModeID", 
+					"valueFrom"=>$eotObj->submissionModeID, 
+					"valueTo"=>strip_tags($request->post->submissionModeID)					
+				];	
+			}			
 		}	
 
         if (isset($request->post->status) && !empty($request->post->status)) {
-			$editFields['status'] = "?";
-			$editValues[] = $request->post->status;
-		}	          
+
+            $editFields['status'] = "?";
+            $editValues[] = $request->post->status;
+
+            if($request->post->status!=$eotObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$eotObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	
+
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -2108,6 +2929,18 @@ class tpb implements Listable {
 		$sql = Sql::update('tpbEOT')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "EOT";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit EOT [ID: ".$eotObj->id."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);                
+            }
 
             if($eotObj->status!=$request->post->status) {
                 if($request->post->status==2) { // aproved
@@ -2116,14 +2949,44 @@ class tpb implements Listable {
                         $conditionObj = self::getConditionDetail($conditionID);
                         $newConditionDeadline = date('Y-m-d H:i:s', strtotime('+'.$eotObj->extendMonth.' months', strtotime($conditionObj->deadline)));
                         $sql = Sql::update('tpbCondition')->setFieldValue(['deadline'=>'"'.$newConditionDeadline.'"'])->where(['id', '=', $conditionID])->where(['status', '=', 1]);
-                        $sql->prepare()->execute();
+                        if($sql->prepare()->execute()){
+                            $logData = [];
+                            $logData['userID']= $currentUserObj->id;
+                            $logData['module'] = "Condition";
+                            $logData['referenceID'] = $conditionID;
+                            $logData['action'] = "Update";
+                            $logData['description'] = "Approved EOT [ID: ".$eotObj->id."]";
+                            $logData['sqlStatement'] = $sql;
+                            $logData['sqlValue'] = $newConditionDeadline;			
+                            $logData['changes'] = [[
+                                "key"=>"deadline", 
+                                "valueFrom"=>$conditionObj->deadline, 
+                                "valueTo"=>strip_tags($newConditionDeadline)					
+                            ]];
+                            systemLog::add($logData);
+                        }
 
                         // update related task dead line 
                         $taskList = task::findByConditionID($conditionID);
                         foreach($taskList as $task) {
                             $newTaskDeadline = date('Y-m-d H:i:s', strtotime('+'.$eotObj->extendMonth.' months', strtotime($task['deadline'])));
                             $sql = Sql::update('task')->setFieldValue(['deadline'=>'"'.$newTaskDeadline.'"'])->where(['id', '=', $task['id']])->where(['status', '=', 1]);
-                            $sql->prepare()->execute();                           
+                            if($sql->prepare()->execute()){
+                                $logData = [];
+                                $logData['userID']= $currentUserObj->id;
+                                $logData['module'] = "Task";
+                                $logData['referenceID'] = $task['id'];
+                                $logData['action'] = "Update";
+                                $logData['description'] = "Approved EOT [ID: ".$eotObj->id."]";
+                                $logData['sqlStatement'] = $sql;
+                                $logData['sqlValue'] = $newTaskDeadline;			
+                                $logData['changes'] = [[
+                                    "key"=>"deadline", 
+                                    "valueFrom"=>$task['deadline'], 
+                                    "valueTo"=>strip_tags($newTaskDeadline)					
+                                ]];
+                                systemLog::add($logData);
+                            }                       
                         }
 
                     }
@@ -2132,29 +2995,55 @@ class tpb implements Listable {
 
                     foreach($request->post->conditionID as $conditionID){
                         // update related condition status
+                        $conditionObj = self::getConditionDetail($conditionID);
                         $sql = Sql::update('tpbCondition')->setFieldValue(['status'=>'3'])->where(['id', '=', $conditionID]);
-                        $sql->prepare()->execute();
+                        if($sql->prepare()->execute()){
+                            $logData = [];
+                            $logData['userID']= $currentUserObj->id;
+                            $logData['module'] = "Condition";
+                            $logData['referenceID'] = $conditionID;
+                            $logData['action'] = "Update";
+                            $logData['description'] = "Rejected EOT [ID: ".$eotObj->id."]";
+                            $logData['sqlStatement'] = $sql;
+                            $logData['sqlValue'] = 3;			
+                            $logData['changes'] = [[
+                                "key"=>"status", 
+                                "valueFrom"=>$conditionObj->status, 
+                                "valueTo"=>strip_tags(3)					
+                            ]];
+                            systemLog::add($logData);
+                        } 
 
                         // update related task status
                         $taskList = task::findByConditionID($conditionID);
                         foreach($taskList as $task) {
                             $sql = Sql::update('task')->setFieldValue(['status'=>'2'])->where(['id', '=', $task['id']]);
-                            $sql->prepare()->execute();                          
+                            if($sql->prepare()->execute()){
+                                $logData = [];
+                                $logData['userID']= $currentUserObj->id;
+                                $logData['module'] = "Task";
+                                $logData['referenceID'] = $task['id'];
+                                $logData['action'] = "Update";
+                                $logData['description'] = "Rejected EOT [ID: ".$eotObj->id."]";
+                                $logData['sqlStatement'] = $sql;
+                                $logData['sqlValue'] = 2;			
+                                $logData['changes'] = [[
+                                    "key"=>"deadline", 
+                                    "valueFrom"=>$task['status'], 
+                                    "valueTo"=>strip_tags(2)					
+                                ]];
+                                systemLog::add($logData);
+                            }                           
                         }
                     }
-                    
                     
                     // withdrawn application
                     if($eotObj->tpbID>0){
                         self::updateTBPStatus($eotObj->tpbID, 8);
                     }
 
-
                 }
             }
-
-
-
 
 			return new Data(['success'=>true, 'message'=>L('info.updated'), 'EOTDocID'=>$EOTDocID, 'EOTDocPath'=>documentHelper::find($EOTDocID)->downloadPath]);			
 		} else {
@@ -2224,15 +3113,48 @@ class tpb implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-        if ($sql->prepare()->execute([
+        $addValues = [
             strip_tags($request->post->tpbID),
             strip_tags($request->post->conditionNo),
             strip_tags($request->post->description),
             strip_tags($request->post->deadline),
             strip_tags(1)
-        ])) {                
+        ];
+
+        if ($sql->prepare()->execute($addValues)) {                
 
             $conditionID = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Condition";
+			$logData['referenceID'] = $conditionID;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New Condition [".$request->post->description."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"tpbID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->tpbID)
+                    ],[
+						"key"=>"conditionNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->conditionNo)
+                    ],[
+						"key"=>"description", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->description)
+                    ],[
+						"key"=>"deadline", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->deadline)
+                    ]
+				];       
+                
+            systemLog::add($logData);
 
             return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$conditionID]);
         } else {
@@ -2296,6 +3218,7 @@ class tpb implements Listable {
             return new Data(['success'=>false, 'message'=>L('error.conditionEmptyID'), 'field'=>'conditionID', 'tab'=>'pills-condition']);
 
         $conditionObj = self::getConditionDetail($request->get->id);
+
         if(is_null($conditionObj))
             return new Data(['success'=>false, 'message'=>L('error.conditionNotFound'), 'field'=>'notice']);               
 
@@ -2313,27 +3236,63 @@ class tpb implements Listable {
         // file upload
         $editFields = [];
         $editValues = [];
-       
+		$logContent = [];	    
+        
+		if (isset($request->post->conditionNo) && !empty($request->post->conditionNo)) {
 
-        if (isset($request->post->conditionNo) && !empty($request->post->conditionNo)) {
-			$editFields['conditionNo'] = "?";
-			$editValues[] = $request->post->conditionNo;
-		}	 
+            $editFields['conditionNo'] = "?";
+            $editValues[] = $request->post->conditionNo;
 
-        if (isset($request->post->description) && !empty($request->post->description)) {
-			$editFields['description'] = "?";
-			$editValues[] = $request->post->description;
-		}	
-
-        if (isset($request->post->deadline) && !empty($request->post->deadline)) {
-			$editFields['deadline'] = "?";
-			$editValues[] = $request->post->deadline;
+            if($request->post->conditionNo!=$conditionObj->conditionNo) {
+				$logContent[] = [
+					"key"=>"conditionNo", 
+					"valueFrom"=>$conditionObj->conditionNo, 
+					"valueTo"=>strip_tags($request->post->conditionNo)					
+				];	
+			}			
 		}	        
        
-        if (isset($request->post->status) && !empty($request->post->status)) {
-			$editFields['status'] = "?";
-			$editValues[] = $request->post->status;
-		}	          
+		if (isset($request->post->description) && !empty($request->post->description)) {
+
+            $editFields['description'] = "?";
+            $editValues[] = $request->post->description;
+
+            if($request->post->description!=$conditionObj->description) {
+				$logContent[] = [
+					"key"=>"description", 
+					"valueFrom"=>$conditionObj->description, 
+					"valueTo"=>strip_tags($request->post->description)					
+				];	
+			}			
+		}	
+        
+		if (isset($request->post->deadline) && !empty($request->post->deadline)) {
+
+            $editFields['deadline'] = "?";
+            $editValues[] = $request->post->deadline;
+
+            if($request->post->deadline.":00"!=$conditionObj->deadline) {
+				$logContent[] = [
+					"key"=>"deadline", 
+					"valueFrom"=>$conditionObj->deadline, 
+					"valueTo"=>strip_tags($request->post->deadline)					
+				];	
+			}			
+		}	
+        
+		if (isset($request->post->status) && !empty($request->post->status)) {
+
+            $editFields['status'] = "?";
+            $editValues[] = $request->post->status;
+
+            if($request->post->status!=$conditionObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$conditionObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	        
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -2345,6 +3304,18 @@ class tpb implements Listable {
 		$sql = Sql::update('tpbCondition')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "Condition";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Update Condition [ID: ".$conditionObj->id."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);
+            }
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -2512,7 +3483,7 @@ class tpb implements Listable {
         foreach ($stm as $opt) {  
              $option[$opt['id']] = $opt['name'];			  
         }
-        $content .= formLayout::rowMultiSelectNew(L('tpb.zoning'), 'zoningID[]', 'zoningID', $option,  6, [], ['required'], empty($obj['zoningID'])?[]:$obj['zoningID']);             
+        $content .= formLayout::rowMultiSelectNew(L('tpb.zoning'), 'zoningID[]', 'zoningID', $option,  6, ['select2'], ['required'], empty($obj['zoningID'])?[]:$obj['zoningID']);             
         
         $content .= formLayout::rowInputNew(L('tpb.proposedUse'),'proposedUse', 'proposedUse', 'text',  6, [], ['required'], is_null($obj)?'':$obj['proposedUse']);
 
@@ -2525,11 +3496,11 @@ class tpb implements Listable {
         $content .= formLayout::rowSelectNew(L('tpb.rntpc'), 'rntpcID', 'rntpcID', $option,  6, [], ['required'], empty($obj['rntpcID'])?"":$obj['rntpcID']);                    
 
 
-        $content .= formLayout::rowInputNew(L('tpb.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDateTime'], ['required'], empty($obj['submissionDate'])?'':$obj['submissionDate']);
+        $content .= formLayout::rowInputNew(L('tpb.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDate'], ['required'], empty($obj['submissionDate'])?'':$obj['submissionDate']);
 
         $content .= formLayout::rowTextAreaNew(L('tpb.remarks'), 'remarks', 'remarks',  12, [], [], is_null($obj)?'':$obj['remarks']);
 
-        $content .= formLayout::rowInputNew(L('tpb.lastUpdateDate'),'lastUpdateDate', 'lastUpdateDate', 'text',  6, ['customDateTime'], ['required'], empty($obj['lastUpdateDate'])?'':$obj['lastUpdateDate']);
+        $content .= formLayout::rowInputNew(L('tpb.lastUpdateDate'),'lastUpdateDate', 'lastUpdateDate', 'text',  6, ['customDate'], ['required'], empty($obj['lastUpdateDate'])?'':$obj['lastUpdateDate']);
 
         if(!is_null($obj)) {
             $option = [];
@@ -2777,8 +3748,8 @@ class tpb implements Listable {
             $content .= formLayout::rowInputNew(L('tpb.number'),'TPBNo', 'TPBNo', 'text',  6, [], ['required'], is_null($obj)?'':$obj['TPBNo']);
             $content .= formLayout::rowInputNew(L('tpb.website'),'TPBWebsite', 'TPBWebsite', 'text',  6, [], ['required'], is_null($obj)?'':$obj['TPBWebsite']);
         
-            $content .= formLayout::rowInputNew(L('tpb.receiveDate'),'TPBReceiveDate', 'TPBReceiveDate', 'text',  6, ['customDateTime'], ['required'], empty($obj['TPBReceiveDate'])?'':$obj['TPBReceiveDate']);
-            $content .= formLayout::rowInputNew(L('tpb.considerationDate'),'tentativeConsiderationDate', 'tentativeConsiderationDate', 'text',  6, ['customDateTime'], ['required'], empty($obj['tentativeConsiderationDate'])?'':$obj['tentativeConsiderationDate']);
+            $content .= formLayout::rowInputNew(L('tpb.receiveDate'),'TPBReceiveDate', 'TPBReceiveDate', 'text',  6, ['customDate'], ['required'], empty($obj['TPBReceiveDate'])?'':$obj['TPBReceiveDate']);
+            $content .= formLayout::rowInputNew(L('tpb.considerationDate'),'tentativeConsiderationDate', 'tentativeConsiderationDate', 'text',  6, ['customDate'], ['required'], empty($obj['tentativeConsiderationDate'])?'':$obj['tentativeConsiderationDate']);
         
         
         if(!is_null($obj)) {
@@ -2875,7 +3846,6 @@ class tpb implements Listable {
         
 	} 
     */
-
 
     // old    
     public function decisionTpbForm($request) {
@@ -2996,7 +3966,7 @@ class tpb implements Listable {
         }
 
         $content .= formLayout::rowInputNew(L('tpb.approvalDate'),'approvalDate', 'approvalDate', 'text',  6, ['customDateTime'], [], empty($obj['approvalDate'])?'':$obj['approvalDate']);
-        $content .= formLayout::rowInputNew(L('tpb.approvalValidUntil'),'approvalValidUntil', 'approvalValidUntil', 'text',  6, ['customDateTime'], ['required'], empty($obj['approvalValidUntil'])?'':$obj['approvalValidUntil']);
+        $content .= formLayout::rowInputNew(L('tpb.approvalValidUntil'),'approvalValidUntil', 'approvalValidUntil', 'text',  6, ['customDate'], ['required'], empty($obj['approvalValidUntil'])?'':$obj['approvalValidUntil']);
 
         $conditionList = self::findCondition($request->get->id);
 
@@ -3249,7 +4219,7 @@ class tpb implements Listable {
                     
                     $content .= "<div class='row'>";
                         $content .= formLayout::rowDisplayLineNew(L('tpb.refNo'), $obj['refNo']??"", 6);
-                        $content .= formLayout::rowDisplayLineNew(L('tpb.officer'), implode(", ",$obj['userName']), 6); 
+                        $content .= formLayout::rowDisplayLineNew(L('tpb.officer'), implode(", ",$obj['userName']??[]), 6); 
                     $content .= "</div>";
                     $content .= "<div class='row'>";   
                         $content .= formLayout::rowDisplayLineNew(L('tpb.addressDDLot'), $obj['addressDDLot']??"", 12);  
@@ -3294,9 +4264,8 @@ class tpb implements Listable {
                 $content .= "<div class='tab-pane tpbViewMenuDiv fade' id='pills-submission' role='tabpanel' aria-labelledby='pills-submission-tab'>";
                     
                     $content .= "<div class='row'>";
-                        $content .= formLayout::rowDisplayLineNew(L('tpb.submissionDate'), $obj['submissionDate']=="0000-00-00 00:00:00" || empty($obj['submissionDate'])?"":$obj['submissionDate'], 6);              
-                        $content .= formLayout::rowDisplayLineNew(L('tpb.submissionMode'), submissionMode::find($obj['submissionModeID'])->name, 6);
-                    
+                        $content .= formLayout::rowDisplayLineNew(L('tpb.submissionDate'), $obj['submissionDate']=="0000-00-00" || empty($obj['submissionDate'])?"":$obj['submissionDate'], 6);              
+                        $content .= formLayout::rowDisplayLineNew(L('tpb.submissionMode'), submissionMode::find($obj['submissionModeID'])->name??"", 6);                    
                         $content .= formLayout::rowDisplayLineNew(L('tpb.landRegistry'), $obj['submissionDocID']>0?'<div class="d-flex gap-2 btnGrp"><button type="button" class="btn btn-black downloadDoc btn-xs submissionDocDownload" data-id="'.$obj['submissionDocID'].'"><i class="fas fa-download"></i></button></div>':'', 6);
                         $content .= formLayout::rowDisplayLineNew(L('tpb.rntpc'), rntpc::find($obj['rntpcID'])->meetingDate??"", 6);                    
                     $content .= "</div>";  
@@ -3313,8 +4282,8 @@ class tpb implements Listable {
                         $content .= formLayout::rowDisplayLineNew(L('tpb.website'), $obj['TPBWebsite']??"", 12);
                     $content .= "</div>";
                     $content .= "<div class='row'>";                        
-                        $content .= formLayout::rowDisplayLineNew(L('tpb.receiveDate'), $obj['TPBReceiveDate']=="0000-00-00 00:00:00" || empty($obj['TPBReceiveDate'])?"":$obj['TPBReceiveDate'], 6);              
-                        $content .= formLayout::rowDisplayLineNew(L('tpb.considerationDate'), $obj['tentativeConsiderationDate']=="0000-00-00 00:00:00" || empty($obj['tentativeConsiderationDate'])?"":$obj['tentativeConsiderationDate'], 6);              
+                        $content .= formLayout::rowDisplayLineNew(L('tpb.receiveDate'), $obj['TPBReceiveDate']=="0000-00-00" || empty($obj['TPBReceiveDate'])?"":$obj['TPBReceiveDate'], 6);              
+                        $content .= formLayout::rowDisplayLineNew(L('tpb.considerationDate'), $obj['tentativeConsiderationDate']=="0000-00-00" || empty($obj['tentativeConsiderationDate'])?"":$obj['tentativeConsiderationDate'], 6);              
                     $content .= "</div>";      
                 $content .= "</div>";    
 
@@ -3322,8 +4291,8 @@ class tpb implements Listable {
                 $content .= "<div class='tab-pane tpbViewMenuDiv fade' id='pills-decision' role='tabpanel' aria-labelledby='pills-decision-tab'>";                    
                     $content .= "<div class='row'>";
                         $content .= formLayout::rowDisplayLineNew(L('tpb.decision'), decision::find($obj['decisionID'])->name??"", 6);
-                        $content .= formLayout::rowDisplayLineNew(L('tpb.decisionDate'), $obj['TPBReceiveDate']=="0000-00-00 00:00:00" || empty($obj['TPBReceiveDate'])?"":$obj['TPBReceiveDate'], 6);              
-                        $content .= formLayout::rowDisplayLineNew(L('tpb.approvalValidUntil'), $obj['approvalValidUntil']=="0000-00-00 00:00:00" || empty($obj['approvalValidUntil'])?"":$obj['approvalValidUntil'], 6);              
+                        $content .= formLayout::rowDisplayLineNew(L('tpb.decisionDate'), $obj['decisionDate']=="0000-00-00" || empty($obj['decisionDate'])?"":$obj['decisionDate'], 6);              
+                        $content .= formLayout::rowDisplayLineNew(L('tpb.approvalValidUntil'), $obj['approvalValidUntil']=="0000-00-00" || empty($obj['approvalValidUntil'])?"":$obj['approvalValidUntil'], 6);              
                     $content .= "</div>";
                 $content .= "</div>";     
 
@@ -3588,8 +4557,8 @@ class tpb implements Listable {
             $htmlContent .= "<td>".$listObj['refNo']."</td>";
             $htmlContent .= "<td>".$listObj['clientName']."</td>";
             $htmlContent .= "<td>".implode(",", $arrOfficerName)."</td>";
-            $htmlContent .= "<td>".($listObj['submissionDate']=="0000-00-00 00:00:00"?" ":$listObj['submissionDate'])."</td>";
-            $htmlContent .= "<td>".($listObj['lastUpdateDate']=="0000-00-00 00:00:00"?" ":$listObj['lastUpdateDate'])."</td>";
+            $htmlContent .= "<td>".($listObj['submissionDate']=="0000-00-00"?" ":$listObj['submissionDate'])."</td>";
+            $htmlContent .= "<td>".($listObj['lastUpdateDate']=="0000-00-00"?" ":$listObj['lastUpdateDate'])."</td>";
             $htmlContent .= "<td>".$listObj['TPBNo']."</td>";                                   
             $htmlContent .= "<td>";
                 $htmlContent .= "<div class='btn-group' role='group' aria-label=''>";
@@ -3770,7 +4739,7 @@ class tpb implements Listable {
             $htmlContent .= "<td>".$listObj['id']."</td>";
             $htmlContent .= "<td>".$listObj['extendMonth']."</td>";
             $htmlContent .= "<td>".$listObj['reason']."</td>";
-            $htmlContent .= "<td>".($listObj['submissionDate']=="0000-00-00 00:00:00"?" ":$listObj['submissionDate'])."</td>";
+            $htmlContent .= "<td>".($listObj['submissionDate']=="0000-00-00"?" ":$listObj['submissionDate'])."</td>";
             $htmlContent .= "<td>".$listObj['sumissionMode']."</td>";
             //$htmlContent .= "<td>".$listObj['EOTDocID']."</td>";    
             $htmlContent .= "<td>".$listObj['statusName']."</td>";                               
@@ -3867,6 +4836,7 @@ class tpb implements Listable {
         
 	}   
 
+    // test only
     public static function sendNotification($data) {
         
         $data = new \stdClass;
@@ -3874,7 +4844,7 @@ class tpb implements Listable {
         $data->emailTemplateID = 4;
         $data->recipientEmail = "samieltsang@hotmail.com";
         $data->recipientName = "samiel tsang";
-        $data->TPBNo = "TEST11111111111111111";
+        $data->TPBNo = "TEST";
 
         if(notification::sendEmail($data)){
             return new Data(['success'=>false, 'message'=>L('EmailSent')]);	
@@ -3979,7 +4949,8 @@ class tpb implements Listable {
 		$stmAll->execute();		
 		
 		foreach($stmAll as $obj) {			
-			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-sm btnEdit' data-id='".$obj['id']."'>Condition#".$obj['conditionNo']."<br>".$obj['deadline']."</button></div>";
+			//$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-sm btnEdit' data-id='".$obj['id']."'>Condition#".$obj['conditionNo']."<br>".$obj['deadline']."</button></div>";
+            $content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-sm btnCalendarEdit' data-type='condition' data-id='".$obj['id']."'>Condition#".$obj['conditionNo']."</button></div>";
 			$calendar->addDailyHtml($content, date('Y-m-d', strtotime($obj['deadline'])));	
 		}	
 

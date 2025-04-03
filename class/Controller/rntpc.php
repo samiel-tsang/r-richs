@@ -43,11 +43,30 @@ class rntpc implements Listable {
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
 		
+		$currentUserObj = unserialize($_SESSION['user']);	
+
 		if (!isset($request->get->id) || empty($request->get->id))
-			return new Data(['success'=>false, 'message'=>L('error.rntpcEmptyID')]);	
+			return new Data(['success'=>false, 'message'=>L('error.rntpcEmptyID')]);
+		
+		$rntpcObj = self::find($request->get->id);		
+	
+		if(is_null($rntpcObj))
+			return new Data(['success'=>false, 'message'=>L('error.rntpcNotFound'), 'field'=>'notice']);				
 			
 		$sql = Sql::delete('rntpc')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "RNTPC";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete RNTPC [".$rntpcObj->meetingDate."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);
+
 			return new Data(['success'=>true, 'message'=>L('info.rntpcDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.rntpcDeleteFailed')]);	
@@ -136,18 +155,67 @@ class rntpc implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-				strip_tags($request->post->meetingNo),      
-                strip_tags($request->post->meetingDate),  
-				strip_tags($agendaTC),  
-				strip_tags($agendaEN),  
-				strip_tags($minutesTC),  
-				strip_tags($minutesEN),  
-				strip_tags($audioRecordingTC),  
-				strip_tags($audioRecordingEN),               
-         ])) {
+		$addValues = [
+			strip_tags($request->post->meetingNo),      
+			strip_tags($request->post->meetingDate),  
+			strip_tags($agendaTC),  
+			strip_tags($agendaEN),  
+			strip_tags($minutesTC),  
+			strip_tags($minutesEN),  
+			strip_tags($audioRecordingTC),  
+			strip_tags($audioRecordingEN),               
+		];
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "RNTPC";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New RNTPC [".$request->post->meetingDate."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"meetingNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->meetingNo)
+					],[
+						"key"=>"meetingDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->meetingDate)
+					],[
+						"key"=>"agendaTC", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($agendaTC)
+					],[
+						"key"=>"agendaEN", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($agendaEN)
+					],[
+						"key"=>"minutesTC", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($minutesTC)
+					],[
+						"key"=>"minutesEN", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($minutesEN)
+					],[
+						"key"=>"audioRecordingTC", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($audioRecordingTC)
+					],[
+						"key"=>"audioRecordingEN", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($audioRecordingEN)
+					]
+				];
+
+			systemLog::add($logData);			
 
 			return new Data(['success'=>true, 'message'=>L('info.saved')]);
 			
@@ -178,53 +246,154 @@ class rntpc implements Listable {
 		if (!isset($request->post->meetingDate) || empty($request->post->meetingDate)) 
             return new Data(['success'=>false, 'message'=>L('error.rntpcEmptyMeetingDate'), 'field'=>'meetingDate']);			
 
-        $editFields = [];
+		$editFields = [];
 		$editValues = [];
+		$logContent = [];
 
 		if (isset($request->post->meetingNo) && !empty($request->post->meetingNo)) {
+
 			$editFields['meetingNo'] = "?";
 			$editValues[] = $request->post->meetingNo;
-		}				
+
+			if($request->post->meetingNo!=$rntpcObj->meetingNo) {
+				$logContent[] = [
+					"key"=>"meetingNo", 
+					"valueFrom"=>$rntpcObj->meetingNo, 
+					"valueTo"=>strip_tags($request->post->meetingNo)					
+				];	
+			}			
+		}	
 
 		if (isset($request->post->meetingDate) && !empty($request->post->meetingDate)) {
+
 			$editFields['meetingDate'] = "?";
 			$editValues[] = $request->post->meetingDate;
-		}		
+
+			if($request->post->meetingDate.":00"!=$rntpcObj->meetingDate) {
+				$logContent[] = [
+					"key"=>"meetingDate", 
+					"valueFrom"=>$rntpcObj->meetingDate, 
+					"valueTo"=>strip_tags($request->post->meetingDate)					
+				];	
+			}			
+		}	
 
 		if (isset($request->post->agendaTC) && !empty($request->post->agendaTC)) {
+
 			$editFields['agendaTC'] = "?";
 			$editValues[] = $request->post->agendaTC;
+
+			if($request->post->agendaTC!=$rntpcObj->agendaTC) {
+				$logContent[] = [
+					"key"=>"agendaTC", 
+					"valueFrom"=>$rntpcObj->agendaTC, 
+					"valueTo"=>strip_tags($request->post->agendaTC)					
+				];	
+			}			
 		}		
-		
+
 		if (isset($request->post->agendaEN) && !empty($request->post->agendaEN)) {
+
 			$editFields['agendaEN'] = "?";
 			$editValues[] = $request->post->agendaEN;
+
+			if($request->post->agendaEN!=$rntpcObj->agendaEN) {
+				$logContent[] = [
+					"key"=>"agendaEN", 
+					"valueFrom"=>$rntpcObj->agendaEN, 
+					"valueTo"=>strip_tags($request->post->agendaEN)					
+				];	
+			}			
 		}		
 		
+
+		if (isset($request->post->agendaEN) && !empty($request->post->agendaEN)) {
+
+			$editFields['agendaEN'] = "?";
+			$editValues[] = $request->post->agendaEN;
+
+			if($request->post->agendaEN!=$rntpcObj->agendaEN) {
+				$logContent[] = [
+					"key"=>"agendaEN", 
+					"valueFrom"=>$rntpcObj->agendaEN, 
+					"valueTo"=>strip_tags($request->post->agendaEN)					
+				];	
+			}			
+		}	
+
+
 		if (isset($request->post->minutesTC) && !empty($request->post->minutesTC)) {
+
 			$editFields['minutesTC'] = "?";
 			$editValues[] = $request->post->minutesTC;
-		}		
-		
+
+			if($request->post->minutesTC!=$rntpcObj->minutesTC) {
+				$logContent[] = [
+					"key"=>"minutesTC", 
+					"valueFrom"=>$rntpcObj->minutesTC, 
+					"valueTo"=>strip_tags($request->post->minutesTC)					
+				];	
+			}			
+		}	
+
+
 		if (isset($request->post->minutesEN) && !empty($request->post->minutesEN)) {
+
 			$editFields['minutesEN'] = "?";
 			$editValues[] = $request->post->minutesEN;
-		}		
-		
+
+			if($request->post->minutesEN!=$rntpcObj->minutesEN) {
+				$logContent[] = [
+					"key"=>"minutesEN", 
+					"valueFrom"=>$rntpcObj->minutesEN, 
+					"valueTo"=>strip_tags($request->post->minutesEN)					
+				];	
+			}			
+		}	
+
+
 		if (isset($request->post->audioRecordingTC) && !empty($request->post->audioRecordingTC)) {
+
 			$editFields['audioRecordingTC'] = "?";
 			$editValues[] = $request->post->audioRecordingTC;
-		}		
-		
+
+			if($request->post->audioRecordingTC!=$rntpcObj->audioRecordingTC) {
+				$logContent[] = [
+					"key"=>"audioRecordingTC", 
+					"valueFrom"=>$rntpcObj->audioRecordingTC, 
+					"valueTo"=>strip_tags($request->post->audioRecordingTC)					
+				];	
+			}			
+		}			
+
+
 		if (isset($request->post->audioRecordingEN) && !empty($request->post->audioRecordingEN)) {
+
 			$editFields['audioRecordingEN'] = "?";
 			$editValues[] = $request->post->audioRecordingEN;
-		}				
+
+			if($request->post->audioRecordingEN!=$rntpcObj->audioRecordingEN) {
+				$logContent[] = [
+					"key"=>"audioRecordingEN", 
+					"valueFrom"=>$rntpcObj->audioRecordingEN, 
+					"valueTo"=>strip_tags($request->post->audioRecordingEN)					
+				];	
+			}			
+		}		
 
 		if (isset($request->post->status) && !empty($request->post->status)) {
+
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
-		}	  
+
+			if($request->post->status!=$rntpcObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$rntpcObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}					
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -236,6 +405,19 @@ class rntpc implements Listable {
 		$sql = Sql::update('rntpc')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "RNTPC";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit RNTPC [".$rntpcObj->meetingDate."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);
+			}
+
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -333,7 +515,8 @@ class rntpc implements Listable {
 		
 		
 		foreach($stmAll as $obj) {			
-			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-md btnEdit' data-id='".$obj['id']."'>#".$obj['meetingNo']."<br>".$obj['meetingDate']."</button></div>";
+			//$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-md btnEdit' data-id='".$obj['id']."'>#".$obj['meetingNo']."<br>".$obj['meetingDate']."</button></div>";
+			$content = "<div class='d-grid gap-2'><button type='button' class='btn btn-info btn-md btnEdit' data-id='".$obj['id']."'>#".$obj['meetingNo']."</button></div>";
 			$calendar->addDailyHtml($content, date('Y-m-d', strtotime($obj['meetingDate'])));	
 		}		
 

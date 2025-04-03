@@ -21,10 +21,10 @@ class systemSetting {
 
     public static function updateMetaValue($metaKey, $metaValue) {
         
-        $sql = Sql::update('systemSetting')->setFieldValue(['metaValue'=>$metaValue])->where(['metaKey', '=', '"'.$metaKey.'"']);
+        $sql = Sql::update('systemSetting')->setFieldValue(['metaValue'=>'"'.$metaValue.'"'])->where(['metaKey', '=', '"'.$metaKey.'"']);
 
 		if ($sql->prepare()->execute()) {       
-            return true;
+            return ["status"=>true, "sqlStatement"=>$sql, "sqlValue"=>$metaValue];
         }
 
         return false;
@@ -52,9 +52,44 @@ class systemSetting {
         if (!isset($request->post->autoEmailHour) || empty($request->post->autoEmailHour)) 
 			return new Data(['success'=>false, 'message'=>L('error.systemSettingEmptyEmailSendHour'), 'field'=>'autoEmailHour']);               
 
-        self::updateMetaValue("alertEmailTemplateID", $request->post->alertEmailTemplateID);
-        self::updateMetaValue("autoEmailHour", $request->post->autoEmailHour);
+		$currentAlertEmailTemplateSettingObj = self::findMetaValue("alertEmailTemplateID");
+		$currentAutoEmailHourSettingObj = self::findMetaValue("autoEmailHour");
+		
+		if($currentAlertEmailTemplateSettingObj->metaValue!=$request->post->alertEmailTemplateID){
+     	   $updateEmailTemplateAction = self::updateMetaValue("alertEmailTemplateID", $request->post->alertEmailTemplateID);
 
+			if($updateEmailTemplateAction) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "System Setting";
+				$logData['referenceID'] = $currentAlertEmailTemplateSettingObj->id;
+				$logData['action'] = "update";
+				$logData['description'] = "Update Alert Email Template ID Setting";
+				$logData['sqlStatement'] = $updateEmailTemplateAction['sqlStatement'];
+				$logData['sqlValue'] = $updateEmailTemplateAction['sqlValue'];
+				$logData['changes'] = [["key"=>"alertEmailTemplateID", "valueFrom"=>$currentAlertEmailTemplateSettingObj->metaValue, "valueTo"=>strip_tags($request->post->alertEmailTemplateID)]];
+				systemLog::add($logData);
+			}
+		}	
+
+		if($currentAutoEmailHourSettingObj->metaValue!=$request->post->autoEmailHour){
+        	
+			$updateAutoEmailHourAction = self::updateMetaValue("autoEmailHour", $request->post->autoEmailHour);
+
+			if($updateAutoEmailHourAction) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "System Setting";
+				$logData['referenceID'] = $currentAutoEmailHourSettingObj->id;
+				$logData['action'] = "update";
+				$logData['description'] = "Update Auto Email Hour Setting";
+				$logData['sqlStatement'] = $updateAutoEmailHourAction['sqlStatement'];
+				$logData['sqlValue'] = $updateAutoEmailHourAction['sqlValue'];				
+				$logData['changes'] = [["key"=>"autoEmailHour", "valueFrom"=>$currentAutoEmailHourSettingObj->metaValue, "valueTo"=>strip_tags($request->post->autoEmailHour)]];
+				systemLog::add($logData);
+			}				
+		}
+		
         return new Data(['success'=>true, 'message'=>L('info.updated')]);		
 
     }

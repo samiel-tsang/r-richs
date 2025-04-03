@@ -91,9 +91,7 @@ class emailTemplate {
 		return new FormPage('emailTemplate/emailform', null);
 	}	
 	
-	public function sendEmail($request) {
-
-
+	public function sendEmail($request) {		
 		return null;
 	}
 
@@ -181,12 +179,28 @@ class emailTemplate {
 	public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+		$currentUserObj = unserialize($_SESSION['user']);	
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.emailTemplateEmptyID')]);	
+
+		$emailTemplateObj = self::find($request->get->id);
 			
 		$sql = Sql::delete('emailTemplate')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Email Template";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete Email Template [".$emailTemplateObj->name."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);			
+
 			return new Data(['success'=>true, 'message'=>L('info.emailTemplateDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.emailTemplateDeleteFailed')]);	
@@ -262,6 +276,40 @@ class emailTemplate {
 		if ($sql->prepare()->execute($addValues)) {
 			$id = db()->lastInsertId();
 
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Email Template";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New Email Template [".$request->post->name."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"name", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->name)
+					],[
+						"key"=>"subject", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->subject)
+					]
+					,[
+						"key"=>"content", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->content)
+					]
+					,[
+						"key"=>"status", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags(1)
+					]					
+				];
+
+			systemLog::add($logData);	
+			
+
 			return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$id, 'name'=>$request->post->name]);
 			
 		} else {
@@ -275,23 +323,122 @@ class emailTemplate {
 
 		$currentUserObj = unserialize($_SESSION['user']);
 
+		if (!isset($request->get->id) || empty($request->get->id))
+			return new Data(['success'=>false, 'message'=>L('error.userEmptyID'), 'field'=>'notice']);
+
+		$emailTemplateObj = self::find($request->get->id);
+		
+		if(is_null($emailTemplateObj))
+			return new Data(['success'=>false, 'message'=>L('error.emailTemplateNotFound'), 'field'=>'notice']);
+
 		if (!isset($request->post->name) || empty($request->post->name))
 			return new Data(['success'=>false, 'message'=>L('error.emailTemplateEmptyName'), 'field'=>'name']);
 
 		if (!isset($request->post->subject) || empty($request->post->subject))
-			return new Data(['success'=>false, 'message'=>L('error.emailTemplateEmptySubject'), 'field'=>'subject']);
-		
+			return new Data(['success'=>false, 'message'=>L('error.emailTemplateEmptySubject'), 'field'=>'subject']);		
+			
 		/*
 		if (!isset($request->post->content) || empty($request->post->content)) {
 			return new Data(['success'=>false, 'message'=>L('error.emailTemplateEmptyName'), 'field'=>'content']);
         }
 		*/	
+		$editFields = [];
+		$editValues = [];
+		$logContent = [];		
 
-		$editFields = ['subject' => "?", 'content' => "?", 'modifyDate' => 'NOW()', 'modifyBy' => $currentUserObj->id];
-		$editValues = [strip_tags($request->post->subject), $request->post->content];
+		if (isset($request->post->name) && !empty($request->post->name)) {
+
+			$editFields['name'] = "?";
+			$editValues[] = $request->post->name;
+
+			if($request->post->name!=$emailTemplateObj->name) {
+				$logContent[] = [
+					"key"=>"name", 
+					"valueFrom"=>$emailTemplateObj->name, 
+					"valueTo"=>strip_tags($request->post->name)					
+				];	
+			}			
+		}	
+
+		if (isset($request->post->subject) && !empty($request->post->subject)) {
+
+			$editFields['subject'] = "?";
+			$editValues[] = $request->post->subject;
+
+			if($request->post->subject!=$emailTemplateObj->subject) {
+				$logContent[] = [
+					"key"=>"subject", 
+					"valueFrom"=>$emailTemplateObj->subject, 
+					"valueTo"=>strip_tags($request->post->subject)					
+				];	
+			}			
+		}	
+
+		if (isset($request->post->content) && !empty($request->post->content)) {
+
+			$editFields['content'] = "?";
+			$editValues[] = $request->post->content;
+
+			if($request->post->content!=$emailTemplateObj->content) {
+				$logContent[] = [
+					"key"=>"content", 
+					"valueFrom"=>$emailTemplateObj->content, 
+					"valueTo"=>strip_tags($request->post->content)					
+				];	
+			}			
+		}	
+
+		if (isset($request->post->name) && !empty($request->post->phone)) {
+
+			$editFields['phone'] = "?";
+			$editValues[] = $request->post->phone;
+
+			if($request->post->phone!=$emailTemplateObj->phone) {
+				$logContent[] = [
+					"key"=>"phone", 
+					"valueFrom"=>$emailTemplateObj->phone, 
+					"valueTo"=>strip_tags($request->post->phone)					
+				];	
+			}			
+		}	
+
+		if (isset($request->post->status) && !empty($request->post->status)) {
+
+			$editFields['status'] = "?";
+			$editValues[] = $request->post->status;
+
+			if($request->post->status!=$emailTemplateObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$emailTemplateObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}			
+
+		if (count($editFields)) {
+			$editFields['modifyDate'] = "NOW()";
+			$editFields['modifyBy'] = $currentUserObj->id;
+		}
+
+        if (count($editFields) == 0) return new Data(['success'=>false, 'message'=>L('error.nothingEdit'), 'field'=>'notice']);
 
 		$sql = Sql::update('emailTemplate')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute($editValues)) {
+
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "Email Template";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit Email Template [".$emailTemplateObj->name."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);
+			}
+
 			return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$request->get->id, 'name'=>$request->post->name]);
 		} else {
 			return new Data(['success'=>true, 'message'=>L('error.unableUpdate')]);

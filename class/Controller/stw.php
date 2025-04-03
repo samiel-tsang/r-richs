@@ -70,12 +70,31 @@ class stw implements Listable {
     public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+        $currentUserObj = unserialize($_SESSION['user']);            
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.stwEmptyID')]);	
+
+        $stwObj = self::find($request->get->id);		
+
+        if(is_null($stwObj))
+            return new Data(['success'=>false, 'message'=>L('error.stwNotFound'), 'field'=>'notice']);	            
 			
 		$sql = Sql::delete('stw')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+            $logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "STW";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete STW [".$stwObj->refNo."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);	
+
 			return new Data(['success'=>true, 'message'=>L('info.stwDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.stwFailed')]);	
@@ -87,13 +106,13 @@ class stw implements Listable {
 		if (!user::checklogin()) return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);
 
 		$currentUserObj = unserialize($_SESSION['user']);
-		
+
         $tpbID = 0;
         if (isset($request->post->tpbID) && !empty($request->post->tpbID)) {
             $tpbID = $request->post->tpbID;
             $tpbObj = tpb::find($tpbID);
         }
-
+		
 		$obj = null;
 		if (isset($request->get->id)) 
 			$obj = self::find($request->get->id, \PDO::FETCH_NAMED);
@@ -137,7 +156,7 @@ class stw implements Listable {
                                     
                                     $content .= "<div class='row'>";
                                         $content .= formLayout::rowInputNew(L('stw.refNo'),'refNo', 'refNo', 'text',  6, [], [], is_null($obj)?'':$obj['refNo']);                       
-                        
+                             
                                         if($tpbID==0){
                                             $option = [""=>""];
                                             $sql = Sql::select(['tpb', 'tpb'])->leftJoin(['tpbOfficer', 'tpbOfficer'], "tpb.id = tpbOfficer.tpbID");
@@ -163,8 +182,8 @@ class stw implements Listable {
                                             $option = [$tpbID=>$tpbObj->TPBNo];
                                         }
                                         
-                                        $content .= formLayout::rowSelectNew(L('tpb.number'), 'tpbID', 'tpbID', $option,  6, [], ['required'], is_null($obj)?'':$obj['tpbID']);     
-                        
+                                        $content .= formLayout::rowSelectNew(L('tpb.number'), 'tpbID', 'tpbID', $option,  6, [], ['required'], is_null($obj)?'':$obj['tpbID']);                                                  
+                                                                
                                     $content .= "</div>";
                     
                                     $content .= "<div class='row'>";
@@ -196,7 +215,7 @@ class stw implements Listable {
                                     $content .= "</div>";
 
                                     $content .= "<div class='row'>";
-                                        $content .= formLayout::rowInputNew(L('stw.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDateTime'], [], is_null($obj)?'':$obj['submissionDate']);         
+                                        $content .= formLayout::rowInputNew(L('stw.submissionDate'),'submissionDate', 'submissionDate', 'text',  6, ['customDate'], [], is_null($obj)?'':$obj['submissionDate']);         
                                     $content .= "</div>";
 
                                     $content .= "<div class='row'>";
@@ -317,10 +336,11 @@ class stw implements Listable {
         
         if (!isset($request->post->tpbID) || empty($request->post->tpbID)) 
 			return new Data(['success'=>false, 'message'=>L('error.stwEmptyTPB'), 'field'=>'tpbID', 'tab'=>'pills-stwapplication']);
-        */
+            
         if (!isset($request->post->clientID) || empty($request->post->clientID)) 
 			return new Data(['success'=>false, 'message'=>L('error.stwEmptyClient'), 'field'=>'clientID', 'tab'=>'pills-stwapplication']);
-
+        */
+        
         /*
         if (!isset($request->post->addressDDLot) || empty($request->post->addressDDLot)) 
 			return new Data(['success'=>false, 'message'=>L('error.stwEmptyAddressDDLot'), 'field'=>'addressDDLot', 'tab'=>'pills-stwapplication']);       
@@ -348,17 +368,58 @@ class stw implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->refNo),
-                strip_tags($request->post->tpbID),
-                strip_tags($request->post->clientID), 
-                strip_tags($request->post->addressDDLot),
-                strip_tags($request->post->submissionDate), 
-                strip_tags($STWDocID)
-         ])) {
+        $addValues = [
+            strip_tags($request->post->refNo),
+            strip_tags($request->post->tpbID),
+            strip_tags($request->post->clientID), 
+            strip_tags($request->post->addressDDLot),
+            strip_tags($request->post->submissionDate), 
+            strip_tags($STWDocID)
+        ];
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
 
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "STW";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New STW [".$request->post->refNo."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"refNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->refNo)
+                    ],[
+						"key"=>"tpbID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->tpbID)
+					],[
+						"key"=>"clientID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->clientID)
+                    ],[
+						"key"=>"addressDDLot", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->addressDDLot)
+					],[
+						"key"=>"submissionDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->submissionDate)
+                    ],[
+						"key"=>"STWDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($STWDocID)
+					]
+				];
+
+			systemLog::add($logData);
 
             // delete removed 
             $mailingLogList = self::findMailingLog($id);
@@ -371,28 +432,60 @@ class stw implements Listable {
                     }
                     
                 }
-            }      
-
+            } 
 
             foreach($request->post->lineStatus as $idx => $status){
 
                 if($status==0){ // new item
-                    $sql = Sql::insert('stwMailingLog')->setFieldValue([
-                        'stwID' => "?", 
-                        'mailingFrom' => "?",
-                        'mailingDate' => "?",
-                        'mailingContent' => "?"                
-                    ]);               
-    
-                    $sql->prepare()->execute([
-                        strip_tags($id),
-                        strip_tags($request->post->from[$idx]),
-                        strip_tags($request->post->date[$idx]),
-                        strip_tags($request->post->content[$idx])
-                    ]);
+                    if($request->post->from[$idx]!="" && $request->post->date[$idx]!="" && $request->post->content[$idx]) {
+                        $sql = Sql::insert('stwMailingLog')->setFieldValue([
+                            'stwID' => "?", 
+                            'mailingFrom' => "?",
+                            'mailingDate' => "?",
+                            'mailingContent' => "?"                
+                        ]);               
+        
+                        $addMailingItemValues = [
+                            strip_tags($id),
+                            strip_tags($request->post->from[$idx]),
+                            strip_tags($request->post->date[$idx]),
+                            strip_tags($request->post->content[$idx])
+                        ];
+
+                        $sql->prepare()->execute($addMailingItemValues);
+
+                        $mailingLogID = db()->lastInsertId();
+
+                        $logMailingData = [];
+                        $logMailingData['userID']= $currentUserObj->id;
+                        $logMailingData['module'] = "STW";
+                        $logMailingData['referenceID'] = $mailingLogID;
+                        $logMailingData['action'] = "Insert";
+                        $logMailingData['description'] = "Create New STW Mailing Log [".$request->post->refNo."]";
+                        $logMailingData['sqlStatement'] = $sql;
+                        $logMailingData['sqlValue'] = $addMailingItemValues;
+                        $logMailingData['changes'] = 
+                            [
+                                [
+                                    "key"=>"mailingFrom", 
+                                    "valueFrom"=>"", 
+                                    "valueTo"=>strip_tags($request->post->from[$idx])
+                                ],[
+                                    "key"=>"mailingDate", 
+                                    "valueFrom"=>"", 
+                                    "valueTo"=>strip_tags($request->post->date[$idx])
+                                ],[
+                                    "key"=>"mailingContent", 
+                                    "valueFrom"=>"", 
+                                    "valueTo"=>strip_tags($request->post->content[$idx])
+                                ]
+                            ];
+            
+                        systemLog::add($logMailingData);
+                    }
                     
-                } else if($status>0) { //edit record
-    
+                } else if($status>0) { //edit record (should not exist anymore)
+                    /*
                     $editFields = [];
                     $editValues = [];
                     
@@ -416,26 +509,26 @@ class stw implements Listable {
                     if ($sql->prepare()->execute($editValues)) {
                         ;
                     }
-    
+                    */    
                 }
                 
             }  
             
-            $officerList = tpb::findOfficer($request->post->tpbID);
+            if(isset($request->post->tpbID) && !empty($request->post->tpbID)){
+                $officerList = tpb::findOfficer($request->post->tpbID);
 
-            foreach($officerList as $officer) {
-                $dataArray = [
-                    'userID'=> strip_tags($officer['userID']),
-                    'tpbID'=> strip_tags($request->post->tpbID),
-                    'conditionID'=> strip_tags(0),
-                    'description'=> strip_tags("(STW ID: ".$id.") STW Application Submission"),
-                    'deadline'=> strip_tags(date('Y-m-d H:i:s', strtotime('+4 months')))
-                ];             
-    
-                task::createTask($dataArray);
+                foreach($officerList as $officer) {
+                    $dataArray = [
+                        'userID'=> strip_tags($officer['userID']),
+                        'tpbID'=> strip_tags($request->post->tpbID),
+                        'conditionID'=> strip_tags(0),
+                        'description'=> strip_tags("(STW ID: ".$id.") STW Application Submission"),
+                        'deadline'=> strip_tags(date('Y-m-d H:i:s', strtotime('+4 months')))
+                    ];             
+        
+                    task::createTask($dataArray);
+                }
             }
-
-
 
 			return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$id, 'name'=>$request->post->refNo]);
 			
@@ -456,6 +549,7 @@ class stw implements Listable {
 			return new Data(['success'=>false, 'message'=>L('error.stwEmptyID'), 'field'=>'notice']);
 
 		$stwObj = self::find($request->get->id);
+
 		if(is_null($stwObj))
 			return new Data(['success'=>false, 'message'=>L('error.stwNotFound'), 'field'=>'notice']);
 
@@ -481,46 +575,108 @@ class stw implements Listable {
 
         $editFields = [];
 		$editValues = [];
+		$logContent = [];
 
         if (isset($request->post->refNo) && !empty($request->post->refNo)) {
-			$editFields['refNo'] = "?";
-			$editValues[] = $request->post->refNo;
+
+            $editFields['refNo'] = "?";
+            $editValues[] = $request->post->refNo;
+
+			if($request->post->refNo!=$stwObj->refNo) {
+				$logContent[] = [
+					"key"=>"refNo", 
+					"valueFrom"=>$stwObj->refNo, 
+					"valueTo"=>strip_tags($request->post->refNo)					
+				];	
+			}			
 		}	
 
-		if (isset($request->post->clientID) && !empty($request->post->clientID)) {
-			$editFields['clientID'] = "?";
-			$editValues[] = $request->post->clientID;
-		}		
+        if (isset($request->post->clientID) && !empty($request->post->clientID)) {
 
-		if (isset($request->post->tpbID) && !empty($request->post->tpbID)) {
-			$editFields['tpbID'] = "?";
-			$editValues[] = $request->post->tpbID;
-		}		        
+            $editFields['clientID'] = "?";
+            $editValues[] = $request->post->clientID;
+
+            if($request->post->clientID!=$stwObj->clientID) {
+				$logContent[] = [
+					"key"=>"clientID", 
+					"valueFrom"=>$stwObj->clientID, 
+					"valueTo"=>strip_tags($request->post->clientID)					
+				];	
+			}			
+		}	
         
-		if (isset($request->post->addressDDLot) && !empty($request->post->addressDDLot)) {
-			$editFields['addressDDLot'] = "?";
-			$editValues[] = $request->post->addressDDLot;
-		}		
-        
-		if (isset($request->post->submissionDate) && !empty($request->post->submissionDate)) {
-			$editFields['submissionDate'] = "?";
-			$editValues[] = $request->post->submissionDate;
-		}		        
+        if (isset($request->post->tpbID) && !empty($request->post->tpbID)) {
+
+            $editFields['tpbID'] = "?";
+            $editValues[] = $request->post->tpbID;
+
+            if($request->post->tpbID!=$stwObj->tpbID) {
+				$logContent[] = [
+					"key"=>"tpbID", 
+					"valueFrom"=>$stwObj->tpbID, 
+					"valueTo"=>strip_tags($request->post->tpbID)					
+				];	
+			}			
+		}	
+
+        if (isset($request->post->addressDDLot) && !empty($request->post->addressDDLot)) {
+
+            $editFields['addressDDLot'] = "?";
+            $editValues[] = $request->post->addressDDLot;
+
+            if($request->post->addressDDLot!=$stwObj->addressDDLot) {
+				$logContent[] = [
+					"key"=>"addressDDLot", 
+					"valueFrom"=>$stwObj->addressDDLot, 
+					"valueTo"=>strip_tags($request->post->addressDDLot)					
+				];	
+			}			
+		}	
+
+        if (isset($request->post->submissionDate) && !empty($request->post->submissionDate)) {
+
+            $editFields['submissionDate'] = "?";
+            $editValues[] = $request->post->submissionDate;
+
+            if($request->post->submissionDate!=$stwObj->submissionDate) {
+				$logContent[] = [
+					"key"=>"submissionDate", 
+					"valueFrom"=>$stwObj->submissionDate, 
+					"valueTo"=>strip_tags($request->post->submissionDate)					
+				];	
+			}			
+		}	        
 		
         $STWDocID = $stwObj->STWDocID;
 
         if (isset($request->files->STWDoc) && !empty($request->files->STWDoc)) {
             $STWDocID = documentHelper::upload($request->files->STWDoc, "STW");
+            
+            $editFields['STWDocID'] = "?";
+            $editValues[] = $STWDocID;  
+
             if($STWDocID>0) {
-                $editFields['STWDocID'] = "?";
-                $editValues[] = $STWDocID;  
+				$logContent[] = [
+					"key"=>"STWDocID", 
+					"valueFrom"=>$stwObj->STWDocID, 
+					"valueTo"=>strip_tags($STWDocID)					
+				];	                
             }
         }
 
-		if (isset($request->post->status) && !empty($request->post->status)) {
-			$editFields['status'] = "?";
-			$editValues[] = $request->post->status;
-		}	        
+        if (isset($request->post->status) && !empty($request->post->status)) {
+
+            $editFields['status'] = "?";
+            $editValues[] = $request->post->status;
+
+            if($request->post->status!=$stwObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$stwObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	             
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -532,69 +688,18 @@ class stw implements Listable {
 		$sql = Sql::update('stw')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
-
-
-           // delete removed 
-           $mailingLogList = self::findMailingLog($request->get->id);
-           foreach($mailingLogList as $oriMailingLogList){			
-               if(!in_array($oriMailingLogList['id'], $request->post->lineStatus)){				
-                   
-                   $delSql = Sql::delete('stwMailingLog')->where(['id', '=', "'".$oriMailingLogList['id']."'"]);
-                   if($delSql->execute()){
-                       ;
-                   }
-                   
-               }
-           }      
-
-
-           foreach($request->post->lineStatus as $idx => $status){
-
-               if($status==0){ // new item
-                   $sql = Sql::insert('stwMailingLog')->setFieldValue([
-                       'stwID' => "?", 
-                       'mailingFrom' => "?",
-                       'mailingDate' => "?",
-                       'mailingContent' => "?"                
-                   ]);               
-   
-                   $sql->prepare()->execute([
-                       strip_tags($request->get->id),
-                       strip_tags($request->post->from[$idx]),
-                       strip_tags($request->post->date[$idx]),
-                       strip_tags($request->post->content[$idx])
-                   ]);
-                   
-               } else if($status>0) { //edit record
-   
-                   $editFields = [];
-                   $editValues = [];
-                   
-                   if (isset($request->post->from[$idx]) && !empty($request->post->from[$idx])) {		
-                       $editFields['mailingFrom'] = "?";
-                       $editValues[] = strip_tags($request->post->from[$idx]);
-                   }
-   
-                   if (isset($request->post->date[$idx]) && !empty($request->post->date[$idx])) {		
-                       $editFields['mailingDate'] = "?";
-                       $editValues[] = strip_tags($request->post->date[$idx]);
-                   }
-   
-                   if (isset($request->post->content[$idx]) && !empty($request->post->content[$idx])) {		
-                       $editFields['mailingContent'] = "?";
-                       $editValues[] = strip_tags($request->post->content[$idx]);
-                   }                
-
-                   $sql = Sql::update('stwMailingLog')->setFieldValue($editFields)->where(['id', '=', $status]);
-   
-                   if ($sql->prepare()->execute($editValues)) {
-                       ;
-                   }
-   
-               }
-               
-           }  
-
+            if (count($logContent)) {
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "STW";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit STW [".$stwObj->refNo."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);	            
+            }
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -769,7 +874,7 @@ class stw implements Listable {
                                         
                                         $content .= formLayout::rowDisplayLineNew(L('stw.refNo'), $obj['refNo'], 6);    
                                         $content .= formLayout::rowDisplayLineNew(L('tpb.number'), tpb::find($obj['tpbID'])->TPBNo??"", 6);    
-                                        $content .= formLayout::rowDisplayLineNew(L('stw.client'), client::find($obj['clientID'])->contactPerson, 6);   
+                                        $content .= formLayout::rowDisplayLineNew(L('stw.client'), client::find($obj['clientID'])->contactPerson??"", 6);   
                                         $content .= formLayout::rowInputNew('','clientID', 'clientID', 'hidden',  6, [], [], $obj['clientID']);                                                                                                                 
                                                                 
                                     $content .= "</div>";
@@ -789,7 +894,7 @@ class stw implements Listable {
                                     $content .= formLayout::rowDisplayLineNew(L('stw.addressDDLot'), $obj['addressDDLot'], 12);   
                                     $content .= formLayout::rowDisplayLineNew(L('stw.submissionDate'), $obj['submissionDate'], 6);  
                                     $content .= formLayout::rowDisplayLineNew(L('stw.submissionDoc'), $obj['STWDocID']>0?'<div class="d-flex gap-2 btnGrp"><button type="button" class="btn btn-black downloadDoc btn-xs mt-2" data-id="'.$obj['STWDocID'].'"><i class="fas fa-download"></i></button></div>':"", 6); 
-                                    $content .= formLayout::rowDisplayLineNew(L('Status'), generalStatus::find($obj['status'])->name, 6);
+                                    $content .= formLayout::rowDisplayLineNew(L('Status'), generalStatus::find($obj['status'])->name??"", 6);
 
                                     $content .= "</div>";
 
@@ -991,14 +1096,43 @@ class stw implements Listable {
             'mailingContent' => "?" 
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->stwID),
-                strip_tags($request->post->mailingDate),
-                strip_tags($request->post->mailingFrom), 
-                strip_tags($request->post->mailingContent)
-         ])) {
+        $addValues = [
+            strip_tags($request->post->stwID),
+            strip_tags($request->post->mailingDate),
+            strip_tags($request->post->mailingFrom), 
+            strip_tags($request->post->mailingContent)
+        ];
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+            $logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "STW";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New STW Mailing log[".$stwObj->refNo."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"mailingDate", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->mailingDate)
+                    ],[
+						"key"=>"mailingFrom", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->mailingFrom)
+					],[
+						"key"=>"mailingContent", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->mailingContent)
+                    ]
+				];
+
+			systemLog::add($logData);            
 
 			return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$id]);
 			
@@ -1062,6 +1196,7 @@ class stw implements Listable {
 		$currentUserObj = unserialize($_SESSION['user']);
 
 		$stwMailingLogObj = self::getMailingLogDetail($request->get->id);
+
 		if(is_null($stwMailingLogObj))
 			return new Data(['success'=>false, 'message'=>L('error.stwEmptyMailingLogID'), 'field'=>'notice']);        
 
@@ -1077,30 +1212,69 @@ class stw implements Listable {
 			return new Data(['success'=>false, 'message'=>L('error.stwEmptyAddressDDLot'), 'field'=>'mailingContent');              
                
         */
-
         $editFields = [];
 		$editValues = [];
+		$logContent = [];
 
-        if (isset($request->post->mailingDate) && !empty($request->post->mailingDate)) {
-			$editFields['mailingDate'] = "?";
-			$editValues[] = $request->post->mailingDate;
+		if (isset($request->post->mailingDate) && !empty($request->post->mailingDate)) {
+
+            $editFields['mailingDate'] = "?";
+            $editValues[] = $request->post->mailingDate;
+
+            if($request->post->mailingDate.":00"!=$stwMailingLogObj->mailingDate) {
+				$logContent[] = [
+					"key"=>"mailingDate", 
+					"valueFrom"=>$stwMailingLogObj->mailingDate, 
+					"valueTo"=>strip_tags($request->post->mailingDate)					
+				];	
+			}			
 		}	
 
 		if (isset($request->post->mailingFrom) && !empty($request->post->mailingFrom)) {
-			$editFields['mailingFrom'] = "?";
-			$editValues[] = $request->post->mailingFrom;
-		}		
 
-		if (isset($request->post->mailingContent) && !empty($request->post->mailingContent)) {
-			$editFields['mailingContent'] = "?";
-			$editValues[] = $request->post->mailingContent;
-		}	        
+            $editFields['mailingFrom'] = "?";
+            $editValues[] = $request->post->mailingFrom;
+
+            if($request->post->mailingFrom!=$stwMailingLogObj->mailingFrom) {
+				$logContent[] = [
+					"key"=>"mailingFrom", 
+					"valueFrom"=>$stwMailingLogObj->mailingFrom, 
+					"valueTo"=>strip_tags($request->post->mailingFrom)					
+				];	
+			}			
+		}	
+        
+        if (isset($request->post->mailingContent) && !empty($request->post->mailingContent)) {
+
+            $editFields['mailingContent'] = "?";
+            $editValues[] = $request->post->mailingContent;
+
+            if($request->post->mailingContent!=$stwMailingLogObj->mailingContent) {
+				$logContent[] = [
+					"key"=>"mailingContent", 
+					"valueFrom"=>$stwMailingLogObj->mailingContent, 
+					"valueTo"=>strip_tags($request->post->mailingContent)					
+				];	
+			}			
+		}	
        
         if (count($editFields) == 0) return new Data(['success'=>false, 'message'=>L('error.nothingEdit'), 'field'=>'notice']);
 		
 		$sql = Sql::update('stwMailingLog')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+            if (count($logContent)){
+                $logData = [];
+                $logData['userID']= $currentUserObj->id;
+                $logData['module'] = "STW";
+                $logData['referenceID'] = $request->get->id;
+                $logData['action'] = "Update";
+                $logData['description'] = "Edit STW Mailing Log [".$stwMailingLogObj->mailingFrom."]";
+                $logData['sqlStatement'] = $sql;
+                $logData['sqlValue'] = $editValues;			
+                $logData['changes'] = $logContent;
+                systemLog::add($logData);	
+            }
             return new Data(['success'=>true, 'message'=>L('info.updated')]);		
         } else {
             return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -1111,12 +1285,31 @@ class stw implements Listable {
     public function mailingLogDelete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+        $currentUserObj = unserialize($_SESSION['user']);            
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.stwMailingLogEmptyID')]);	
+
+        $stwMailingLogObj = self::getMailingLogDetail($request->get->id);		
+	
+        if(is_null($stwMailingLogObj))
+            return new Data(['success'=>false, 'message'=>L('error.roleNotFound'), 'field'=>'notice']);	            
 			
 		$sql = Sql::delete('stwMailingLog')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "STW";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete STW Mailing Log [".$stwMailingLogObj->mailingFrom."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);			
+
 			return new Data(['success'=>true, 'message'=>L('info.stwMailingLogDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.stwMailingLogFailed')]);	

@@ -127,7 +127,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_clientID'
         });
 
         
@@ -204,14 +204,22 @@ include("view/layout/endpage.php");
         });
         
         $('#clientTable tbody').on('click', '.btnView', function (e) {
-
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "client/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_client_detail(button.data('id'));
+        });
+
+        $('#clientTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_client_detail($(this).parent().attr('id'));                 
+        });           
+
+
+        function show_client_detail(id) {
+            ajaxFunc.apiCall("GET", "client/detail/"+id, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
-                  modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
-                  modal.find('#msgBoxLabel').html("<?=L('View');?> <?=L('tpb.client');?> <?=L('Record');?>");
+                  modal.find('#msgBoxLabel').html("<?=L('View');?> <?=L('user.info');?> <?=L('Record');?>");
                   if(form_data.content.success) {
                      modal.find('.modal-body').html(form_data.content.message);                      
                      modal.find('#msgBoxBtnPri').on('click', function (event) {  
@@ -226,12 +234,8 @@ include("view/layout/endpage.php");
                   downloadDoc();  
                                
                }).modal('show')
-
-               $('#msgBox').on('hidden.bs.modal', function (e) {
-                  $(this).find('.modal-dialog').removeClass("modal-xl");
-               })
-            });   
-        });
+            });
+        }        
 
         $('#clientTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();

@@ -113,7 +113,7 @@ foreach($stm as $data){
             "column_tpbNo"=>$data['tpbNo'],
             "column_client"=>$data['contactPerson'],
             "column_addressDDLot"=>$data['addressDDLot'],
-            "column_submissionDate"=>$data['submissionDate'],
+            "column_submissionDate"=>($data['submissionDate']=="0000-00-00"?" ":$data['submissionDate']),   
             "column_status"=>$data['statusName'],        
             "column_function"=>"
                 <div class='btn-group' role='group' aria-label=''>
@@ -141,7 +141,7 @@ foreach($stm as $data){
             "column_tpbNo"=>$data['tpbNo'],
             "column_client"=>$data['contactPerson'],
             "column_addressDDLot"=>$data['addressDDLot'],
-            "column_submissionDate"=>$data['submissionDate'],
+            "column_submissionDate"=>($data['submissionDate']=="0000-00-00"?" ":$data['submissionDate']),   
             "column_status"=>$data['statusName'],        
             "column_function"=>"
                 <div class='btn-group' role='group' aria-label=''>

@@ -57,7 +57,7 @@ class formLayout {
                     $class .= $cla." ";                    
                 }                
 
-                $content .= "<select class='form-control form-select ".$class."' id='".$id."' name='".$name."' ";
+                $content .= "<select class='form-control form-select ".$class."' id='".$id."' name='".$name."' style='width:100%; border:2px solid #ebedf2'";
                 $attributes = "";
                 foreach($prop as $attr) {
                     $attributes .= $attr." ";                    
@@ -78,7 +78,7 @@ class formLayout {
 	}
 
 
-	public static function rowMultiSelectNew(string $label, string $name, string $id, Array $options = [], string $gridDivisorSize, Array $additonClass=[], Array $prop = [], Array $selectedValue=[]) {
+    public static function rowMultiSelectNew(string $label, string $name, string $id, Array $options = [], string $gridDivisorSize, Array $additonClass=[], Array $prop = [], Array $selectedValue=[]) {
         $content = "";
 		$content .= "<div class='col-md-".$gridDivisorSize." col-lg-".$gridDivisorSize."'>";
 			$content .= "<div class='form-group'>";
@@ -92,7 +92,7 @@ class formLayout {
                     $class .= $cla." ";                    
                 }                
 
-                $content .= "<select class='form-control form-select ".$class."' id='".$id."' name='".$name."' multiple ";
+                $content .= "<select class='form-control form-select ".$class."' id='".$id."' name='".$name."' multiple style='width:100%; border:2px solid #ebedf2'";
                 $attributes = "";
                 foreach($prop as $attr) {
                     $attributes .= $attr." ";                    

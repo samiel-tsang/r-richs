@@ -94,7 +94,7 @@ include("view/layout/endpage.php");
                processing: false,
                serverSide: true,
                serverMethod: 'post',
-               ajax: '<?=$request->baseUrl();?>/script/sttList.php',
+               ajax: '<?=$request->baseUrl();?>/script/sttList.php?mode=edit',
                "columns": [
                   { data: 'column_sttID' },
                   { data: 'column_refNo' },
@@ -132,7 +132,7 @@ include("view/layout/endpage.php");
                      );
                      });
                });
-            },
+            },rowId: 'column_sttID'
          });
 
         
@@ -147,7 +147,7 @@ include("view/layout/endpage.php");
                         modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
                         modal.find('.modal-body').html(form_data.content.message);                       
                      
-                     
+                        addMultiSelect();
                         addCalendar();
 
                         $("#addMailingLogRow").click(function(e){
@@ -310,7 +310,17 @@ include("view/layout/endpage.php");
          $('#sttTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "stt/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_stt_detail(button.data('id'));
+         });   
+
+
+         $('#sttTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_stt_detail($(this).parent().attr('id'));                 
+        });            
+         
+         function show_stt_detail(sttID) {
+            ajaxFunc.apiCall("GET", "stt/detail/"+sttID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -336,7 +346,7 @@ include("view/layout/endpage.php");
                            serverSide: true,
                            serverMethod: 'post',
                            autoWidth: false,
-                           ajax: '<?=$request->baseUrl();?>/script/sttMailingLogList.php?mode=view&sttID='+button.data('id'),
+                           ajax: '<?=$request->baseUrl();?>/script/sttMailingLogList.php?mode=view&sttID='+sttID,
                            "columns": [
                               { data: 'column_mailingLogID' },
                               { data: 'column_date' },
@@ -418,9 +428,8 @@ include("view/layout/endpage.php");
                $('#msgBox').on('hidden.bs.modal', function (e) {
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })               
-            });
-
-         });         
+            });           
+         }
         
          $('#sttTable tbody').on('click', '.btnEdit', function (e) {
                e.preventDefault();
@@ -433,6 +442,7 @@ include("view/layout/endpage.php");
                         modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
 
                         modal.find('.modal-body').html(form_data.content.message);
+                        addMultiSelect();
                         addCalendar();
                         removeDoc(); 
                         downloadDoc();  

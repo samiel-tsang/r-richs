@@ -164,7 +164,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_dbmID'
         });
 
         
@@ -223,10 +223,19 @@ include("view/layout/endpage.php");
             });
         });
 
-        $('#dbmTable tbody').on('click', '.btnView', function (e) {
+        $(document, '#dbmTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "dbm/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_dbm_detail(button.data('id'));
+        });
+
+        $('#dbmTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_dbm_detail($(this).parent().attr('id'));                 
+        });  
+
+        function show_dbm_detail(dbmID) {
+            ajaxFunc.apiCall("GET", "dbm/detail/"+dbmID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('.modal-dialog').addClass("modal-xl"); /*  extend xl modal */
@@ -249,9 +258,8 @@ include("view/layout/endpage.php");
                $('#msgBox').on('hidden.bs.modal', function (e) {
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })
-            });
-
-        });
+            });         
+        }
 
         $('#dbmTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();

@@ -169,8 +169,8 @@ foreach($stm as $data){
         "column_tpbRefNo"=>$data['refNo'], 
         "column_tpbClient"=>$data['clientName'], 
         "column_tpbOfficer"=>implode(",", $arrOfficerName),
-        "column_tpbSubmissionDate"=>($data['submissionDate']=="0000-00-00 00:00:00"?" ":$data['submissionDate']),   
-        "column_tpbLastUpdateDate"=>($data['lastUpdateDate']=="0000-00-00 00:00:00"?" ":$data['lastUpdateDate']),   
+        "column_tpbSubmissionDate"=>($data['submissionDate']=="0000-00-00"?" ":$data['submissionDate']),   
+        "column_tpbLastUpdateDate"=>($data['lastUpdateDate']=="0000-00-00"?" ":$data['lastUpdateDate']),   
         "column_tpbNo"=>$data['TPBNo'],  
 
         "column_function"=>"

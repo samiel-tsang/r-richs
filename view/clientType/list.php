@@ -123,7 +123,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_clientTypeID'
         });
 
         
@@ -183,7 +183,17 @@ include("view/layout/endpage.php");
         $('#clientTypeTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "clientType/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_client_type_detail(button.data('id'));
+        });
+
+        $('#clientTypeTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_client_type_detail($(this).parent().attr('id'));                 
+        });            
+
+
+        function show_client_type_detail(clientTypeID) {
+            ajaxFunc.apiCall("GET", "clientType/detail/"+clientTypeID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -207,9 +217,8 @@ include("view/layout/endpage.php");
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })
                */               
-            });
-
-        });
+            });        
+        }
 
         $('#clientTypeTable tbody').on('click', '.btnEdit', function (e) {
             e.preventDefault();

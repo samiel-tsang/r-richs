@@ -123,7 +123,7 @@ include("view/layout/endpage.php");
                     );
                   });
               });
-          },
+          },rowId: 'column_roleID'
         });
 
         
@@ -304,7 +304,16 @@ include("view/layout/endpage.php");
          $('#roleTable tbody').on('click', '.btnView', function (e) {
             e.preventDefault();
             var button = $(e.currentTarget);
-            ajaxFunc.apiCall("GET", "role/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_role_detail(button.data('id'));
+        });
+
+        $('#roleTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_role_detail($(this).parent().attr('id'));                 
+        });   
+        
+        function show_role_detail(roleID) {
+            ajaxFunc.apiCall("GET", "role/detail/"+roleID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('#msgBoxLabel').html("<?=L('View');?> <?=L('Role');?> <?=L('Record');?>");
@@ -323,8 +332,7 @@ include("view/layout/endpage.php");
                                
                }).modal('show')
             });
-
-        });         
+        }
 
       });
 

@@ -206,7 +206,6 @@ $formHtml = '
   $('#uploadImage').submit(function(e) {
     var form = $(this);
     var formData = new FormData(this);
-    //console.log(formData);    
     ajaxFunc.apiCall("POST", "team/uploadAvatar/<?=$teamObj->id;?>", formData, "multipart/form-data", function (data) {      
       
       if(data.content.success==true){

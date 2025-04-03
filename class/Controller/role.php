@@ -20,6 +20,16 @@ class role implements Listable {
 		return $obj;
 	}
 
+	public static function findByRoleIDNavItemID($roleID, $navItemID, $fetchMode=\PDO::FETCH_OBJ) {
+		$sql = Sql::select("rolePermission")->where(['roleID', '=', "?"])->where(['navItemID', '=', "?"]);
+		$stm = $sql->prepare();
+		$stm->execute([$roleID, $navItemID]);
+		$obj = $stm->fetch($fetchMode);
+		if ($obj === false) return null;
+
+		return $obj;
+	}
+
 	public static function find_all($fetchMode=\PDO::FETCH_OBJ) {
 		$sql = Sql::select("role")->where(['status', '=', "'1'"]);
 		$stm = $sql->prepare();
@@ -70,12 +80,31 @@ class role implements Listable {
     public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+		$currentUserObj = unserialize($_SESSION['user']);
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.roleEmptyID')]);	
+
+		$roleObj = self::find($request->get->id);		
+	
+		if(is_null($roleObj))
+			return new Data(['success'=>false, 'message'=>L('error.roleNotFound'), 'field'=>'notice']);					
 			
 		$sql = Sql::delete('role')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Role";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete Role [".$roleObj->name."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);			
+
 			return new Data(['success'=>true, 'message'=>L('info.roleDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.roleDeleteFailed')]);	
@@ -160,22 +189,68 @@ class role implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->name)
-         ])) {
+		$addValues = [
+			strip_tags($request->post->name),               
+	 	];
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Role";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New Role [".$request->post->name."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"name", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->name)
+					]
+				];
+
+			systemLog::add($logData);				
 
             foreach($request->post->navItemID as $navItemID) {
                 $sql = Sql::insert('rolePermission')->setFieldValue([
                     'roleID' => "?", 
                     'navItemID' => "?"
-                ]);               
+                ]);          
 
-                $sql->prepare()->execute([
+				$addNavItemValues = [
                     strip_tags($id),
                     strip_tags($navItemID)
-                ]);
+                ];
+
+                $sql->prepare()->execute($addNavItemValues);
+
+				$permissionID = db()->lastInsertId();
+
+				$logPermissionData = [];
+				$logPermissionData['userID']= $currentUserObj->id;
+				$logPermissionData['module'] = "Role";
+				$logPermissionData['referenceID'] = $permissionID;
+				$logPermissionData['action'] = "Insert";
+				$logPermissionData['description'] = "Create New Role Permission [".$request->post->name."]";
+				$logPermissionData['sqlStatement'] = $sql;
+				$logPermissionData['sqlValue'] = $addNavItemValues;
+				$logPermissionData['changes'] = 
+					[
+						[
+							"key"=>"navItemID", 
+							"valueFrom"=>"", 
+							"valueTo"=>strip_tags($navItemID)
+						]
+					];
+	
+				systemLog::add($logPermissionData);
+
+
             }			
 
 			return new Data(['success'=>true, 'message'=>L('info.saved')]);
@@ -209,17 +284,37 @@ class role implements Listable {
 
         $editFields = [];
 		$editValues = [];
+		$logContent = [];		
+
 
 		if (isset($request->post->name) && !empty($request->post->name)) {
+
 			$editFields['name'] = "?";
 			$editValues[] = $request->post->name;
+
+			if($request->post->name!=$roleObj->name) {
+				$logContent[] = [
+					"key"=>"name", 
+					"valueFrom"=>$roleObj->name, 
+					"valueTo"=>strip_tags($request->post->name)					
+				];	
+			}			
 		}	
 
 		if (isset($request->post->status) && !empty($request->post->status)) {
+
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
-		}	  
-        
+
+			if($request->post->status!=$roleObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$roleObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	 
+
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
 			$editFields['modifyBy'] = $currentUserObj->id;
@@ -231,20 +326,94 @@ class role implements Listable {
 
 		if ($sql->prepare()->execute($editValues)) {
 
-            $sql = Sql::delete('rolePermission')->where(['roleID', '=', $request->get->id]);
-            $sql->prepare()->execute();
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "Role";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit Role [".$roleObj->name."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);	
+			}		
 
-            foreach($request->post->navItemID as $navItemID) {
+            //$sql = Sql::delete('rolePermission')->where(['roleID', '=', $request->get->id]);
+            //$sql->prepare()->execute();
+			//print_r($request->post->navItemID);
+
+			$currentRolePermission = [];
+			foreach(self::findPermission($request->get->id) as $permissionObj){
+				$currentRolePermission[] = $permissionObj['navItemID'];
+			}
+
+			//print_r($currentRolePermission);
+
+			//check new permission
+			$newPermission = array_diff($request->post->navItemID, $currentRolePermission);
+            foreach($newPermission as $navItemID) {
+				
                 $sql = Sql::insert('rolePermission')->setFieldValue([
                     'roleID' => "?", 
                     'navItemID' => "?"
-                ]);               
-
-                $sql->prepare()->execute([
+                ]);				
+				
+				$addNavItemValues = [
                     strip_tags($request->get->id),
                     strip_tags($navItemID)
-                ]);
-            }		
+                ];
+
+                $sql->prepare()->execute($addNavItemValues);
+
+				$permissionID = db()->lastInsertId();
+
+				$logPermissionData = [];
+				$logPermissionData['userID']= $currentUserObj->id;
+				$logPermissionData['module'] = "Role";
+				$logPermissionData['referenceID'] = $permissionID;
+				$logPermissionData['action'] = "Insert";
+				$logPermissionData['description'] = "Add Role Permission [".$request->post->name."]";
+				$logPermissionData['sqlStatement'] = $sql;
+				$logPermissionData['sqlValue'] = $addNavItemValues;
+				$logPermissionData['changes'] = 
+					[
+						[
+							"key"=>"navItemID", 
+							"valueFrom"=>"", 
+							"valueTo"=>strip_tags($navItemID)
+						]
+					];
+	
+				systemLog::add($logPermissionData);
+
+            }
+
+			//print_r($newPermission);
+
+			$removePermission = array_diff($currentRolePermission, $request->post->navItemID);
+			foreach($removePermission as $navItemID) {
+
+				$permissionObj = self::findByRoleIDNavItemID($request->get->id, $navItemID);
+
+				$sql = Sql::delete('rolePermission')->where(['id', '=', $permissionObj->id]);
+				if ($sql->prepare()->execute()) {
+		
+					$logData = [];
+					$logData['userID']= $currentUserObj->id;
+					$logData['module'] = "Role";
+					$logData['referenceID'] = $permissionObj->id;
+					$logData['action'] = "Delete";
+					$logData['description'] = "Delete Role Permission [".$request->post->name."]";
+					$logData['sqlStatement'] = $sql;
+					$logData['sqlValue'] = $request->get->id;
+					$logData['changes'] = [];
+					systemLog::add($logData);				
+					
+				} 				
+
+			}
+
 
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {

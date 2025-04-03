@@ -2,6 +2,7 @@
 include("view/layout/meta.php");
 include("view/layout/head.php");
 ?>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
 .modal.fade .modal-dialog {
   transition: transform 0.3s ease-out, opacity 0.3s ease-out;
@@ -215,7 +216,430 @@ include("view/layout/js.php");
 include("view/layout/endpage.php");
 ?>
 <script>
-      $(document).ready(function () {
+      $(document).ready(function () {         
+
+         var tpbTable0 = $("#tpbTable0").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=0',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         });       
+
+         var tpbTable1 = $("#tpbTable1").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=1',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         }); 
+
+         var tpbTable2 = $("#tpbTable2").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=2',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         });  
+
+         var tpbTable3 = $("#tpbTable3").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=3',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         }); 
+
+         var tpbTable4 = $("#tpbTable4").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=4',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         }); 
+
+         var tpbTable5 = $("#tpbTable5").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=5',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         }); 
+
+         var tpbTable6 = $("#tpbTable6").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=6',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         }); 
+
+         var tpbTable7 = $("#tpbTable7").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=7',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         }); 
+
+         var tpbTable8 = $("#tpbTable8").DataTable({
+            pageLength: 10,
+            autoWidth: false,
+            processing: false,
+            serverSide: true,
+            serverMethod: 'post',
+            ajax: '<?=$request->baseUrl();?>/script/tpbList.php?type=8',
+               "columns": [
+               { data: 'column_tpbID' },
+               { data: 'column_tpbRefNo' },
+               { data: 'column_tpbClient' },
+               { data: 'column_tpbOfficer' },
+               { data: 'column_tpbSubmissionDate' },
+               { data: 'column_tpbLastUpdateDate' },
+               { data: 'column_tpbNo' },
+               { data: 'column_function' },                   
+            ], 
+            initComplete: function () {
+               this.api()
+               .columns([0,1,2,4,5,6])
+               .every(function () {
+                  var column = this;
+                  var select = $(
+                     '<select class="form-select"><option value=""></option></select>'
+                  )
+                     .appendTo($(column.footer()).empty())
+                     .on("change", function () {
+                     var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                     column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                     });
+
+                  column
+                     .data()
+                     .unique()
+                     .sort()
+                     .each(function (d, j) {
+                     select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                     );
+                     });
+               });
+            },rowId: 'column_tpbID'
+         }); 
 
          var myCallback = function () { 
 
@@ -301,7 +725,6 @@ include("view/layout/endpage.php");
           
          /* reload datatables */
          function reloadAllTable() {
-            
             tpbTable0.ajax.reload(myCallback, false);           
             tpbTable1.ajax.reload(myCallback, false); 
             tpbTable2.ajax.reload(myCallback, false);   
@@ -344,8 +767,10 @@ include("view/layout/endpage.php");
                   modal.find('#msgBoxLabel').html("<?=L('Add');?> TPB <?=L('Record');?>");
                   if(form_data.content.success) {
                      modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
-                     modal.find('.modal-body').html(form_data.content.message);   
-                     
+                     modal.find('.modal-body').html(form_data.content.message); 
+
+                     addMultiSelect();
+
                      /* init show/hide for land owner fields */
                      $(".landOwnerSection").show();
                      $(".notLandOwnerSection").hide();            
@@ -357,7 +782,7 @@ include("view/layout/endpage.php");
                      });
 
                      removeConditionRow();
-                     
+ 
                      /* form submit */
                      modal.find('#msgBoxBtnPri').off('click');
                      modal.find('#msgBoxBtnPri').on('click', function (event) {  
@@ -399,9 +824,8 @@ include("view/layout/endpage.php");
                      });  
                      
                      /* init multiselect field */
-                     $('#userID, #zoningID').multiselect({
-                        enableHTML: true
-                     });
+                     
+
 
                      $(".isLandOwnerSelect").click(function(){                        
                         if($(this).val()=="Y"){
@@ -573,6 +997,7 @@ include("view/layout/endpage.php");
                      modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
                      modal.find('.modal-body').html(form_data.content.message);
           
+                     addMultiSelect();
                      addCalendar();   
                      removeDoc(); 
                      downloadDoc();   
@@ -594,7 +1019,6 @@ include("view/layout/endpage.php");
                      // add eot 
                      $(".addEotBtn").click(function(e){
                         var btn = $(e.currentTarget);
-                        console.log(btn.data('id'));
                         e.preventDefault();
                         /* call html form */
                         ajaxFunc.apiCall("GET", "eot/formAdd/"+btn.data('id'), null, null,  function (form_data) { 
@@ -675,7 +1099,6 @@ include("view/layout/endpage.php");
                      // add condition 
                      $(".addConditionBtn").click(function(e){
                         var btn = $(e.currentTarget);
-                        console.log(btn.data('id'));
                         e.preventDefault();
                         /* call html form */
                         ajaxFunc.apiCall("GET", "condition/formAdd/"+btn.data('id'), null, null,  function (form_data) { 
@@ -717,6 +1140,7 @@ include("view/layout/endpage.php");
                                              }).then((willOK) => {
                                                 if (willOK) {                                       
                                                    conditionTable.ajax.reload(myCallback, false);
+                                                   showConditionCalendar(tpbID);
                                                 } 
                                              });    
                                           } else {
@@ -817,107 +1241,8 @@ include("view/layout/endpage.php");
                                           }
                                        });
                                     }      
-                                 });  
-                                 
-                                 /*
-                                 $("#clientID").change(function(e){
-                                    if($(this).val()=="Add") {
-                                       e.preventDefault();
+                                 });                                   
 
-                                       ajaxFunc.apiCall("GET", "client/formAdd", null, null,  function (form_data) { 
-                                          $('#msgBox2').one('show.bs.modal', function (ev) {
-                                             var modal = $(this);
-                                             modal.find('#msgBoxLabel').html("<?=L('Add');?> <?=L('Record');?>");
-                                             if(form_data.content.success) {
-                                                modal.find('.modal-body').html(form_data.content.message);
-                                                $(".companyInfo").closest(".form-group").hide();
-                                                $("#sameAddress").click(function(){
-                                                   if($("#sameAddress").prop("checked")){                           
-                                                      $("#companyAddress").val($("#address").val());
-                                                      $("#companyAddress").closest(".form-group").hide();
-                                                   } else {
-                                                      $("#companyAddress").val("");
-                                                      $("#companyAddress").closest(".form-group").show();
-                                                   }
-                                                });
-                                                
-                                                modal.find('#msgBoxBtnPri').off('click');
-                                                modal.find('#msgBoxBtnPri').on('click', function (event) {  
-                                                   if(document.getElementById("form-addClient")!==null){    
-                                                      var data = new FormData(document.getElementById("form-addClient"));  
-                                                      ajaxFunc.apiCall("POST", "client", data, "multipart/form-data", function(return_data){
-                                                         if(return_data.content.success) {                                                
-                                                            $("#msgBox2").modal("hide");      
-                                                            swal({
-                                                               title: return_data.content.message,
-                                                               text: return_data.content.message,
-                                                               type: "warning",
-                                                               buttons: {
-                                                                  confirm: {
-                                                                     text: "<?=L('OK');?>",
-                                                                     className: "btn btn-success",
-                                                                  }
-                                                               },
-                                                            }).then((willOK) => {
-                                                               if (willOK) {
-                                                                  $("#msgBox2").modal("hide");                                                        
-                                                                  $("#msgBox").find("#clientID").append($('<option>').val(return_data.content.id).text(return_data.content.name));                                                     
-                                                                  $("#clientID option[value='"+return_data.content.id+"']").prop('selected',true);   
-
-                                                                  ajaxFunc.apiCall("GET", "client/detail/"+return_data.content.id, null, null,  function (return_data) {                               
-                                                                     if(return_data.content.success) {
-                                                                        $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                                                        downloadDoc();                                                 
-                                                                     } else {
-                                                                        $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                                                     }     
-                                                                  });
-                                                               } 
-                                                            });    
-                                                         } else {                                                
-                                                            $("#form-addClient").find(".form-group").removeClass("has-error");
-                                                            $("#form-addClient").find(".form-group").find(".hintHelp").text("");
-                                                            $("#form-addClient").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
-                                                            $("#form-addClient").find("#"+return_data.content.field+"Help").text(return_data.content.message);
-                                                            $("#form-addClient").find("#"+return_data.content.field).focus();
-                                                         }
-                                                      });
-                                                   }      
-                                                });  
-                                             } else {
-                                                modal.find('.modal-body').html(form_data.content.message);
-                                                modal.find('#msgBoxBtnPri').on('click', function (event) {  
-                                                   $("#msgBox2").modal("hide");   
-                                                });
-                                             }  
-                                             
-                                             $(".clientTypeSelect").click(function(){
-                                                if($(this).val()==2){
-                                                   $(".companyInfo").closest(".form-group").show();
-                                                } else {
-                                                   $(".companyInfo").closest(".form-group").hide();
-                                                }
-                                             })
-
-                                          }).modal('show')
-                                       });
-
-                                    } else if($(this).val()=="") {
-                                       $("#tpbSelectedClentDetail").html("");
-                                    } else {
-                                       ajaxFunc.apiCall("GET", "client/detail/"+$(this).val(), null, null,  function (return_data) {                               
-                                          if(return_data.content.success) {                                 
-                                             $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                             downloadDoc();
-                                          } else {
-                                             $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                          }     
-                                       });
-
-                                       
-                                    }
-                                 });                     
-                                 */
                               } else {
                                  modal.find('.modal-body').html(form_data.content.message);
                                  modal.find('#msgBoxBtnPri').on('click', function (event) {  
@@ -999,105 +1324,7 @@ include("view/layout/endpage.php");
                                     }      
                                  });  
                                  
-                                 /*
-                                 $("#clientID").change(function(e){
-                                    if($(this).val()=="Add") {
-                                       e.preventDefault();
 
-                                       ajaxFunc.apiCall("GET", "client/formAdd", null, null,  function (form_data) { 
-                                          $('#msgBox2').one('show.bs.modal', function (ev) {
-                                             var modal = $(this);
-                                             modal.find('#msgBoxLabel').html("<?=L('Add');?> <?=L('Record');?>");
-                                             if(form_data.content.success) {
-                                                modal.find('.modal-body').html(form_data.content.message);
-                                                $(".companyInfo").closest(".form-group").hide();
-                                                $("#sameAddress").click(function(){
-                                                   if($("#sameAddress").prop("checked")){                           
-                                                      $("#companyAddress").val($("#address").val());
-                                                      $("#companyAddress").closest(".form-group").hide();
-                                                   } else {
-                                                      $("#companyAddress").val("");
-                                                      $("#companyAddress").closest(".form-group").show();
-                                                   }
-                                                });
-                                                
-                                                modal.find('#msgBoxBtnPri').off('click');
-                                                modal.find('#msgBoxBtnPri').on('click', function (event) {  
-                                                   if(document.getElementById("form-addClient")!==null){    
-                                                      var data = new FormData(document.getElementById("form-addClient"));  
-                                                      ajaxFunc.apiCall("POST", "client", data, "multipart/form-data", function(return_data){
-                                                         if(return_data.content.success) {                                                
-                                                            $("#msgBox2").modal("hide");      
-                                                            swal({
-                                                               title: return_data.content.message,
-                                                               text: return_data.content.message,
-                                                               type: "warning",
-                                                               buttons: {
-                                                                  confirm: {
-                                                                     text: "<?=L('OK');?>",
-                                                                     className: "btn btn-success",
-                                                                  }
-                                                               },
-                                                            }).then((willOK) => {
-                                                               if (willOK) {
-                                                                  $("#msgBox2").modal("hide");                                                        
-                                                                  $("#msgBox").find("#clientID").append($('<option>').val(return_data.content.id).text(return_data.content.name));                                                     
-                                                                  $("#clientID option[value='"+return_data.content.id+"']").prop('selected',true);   
-
-                                                                  ajaxFunc.apiCall("GET", "client/detail/"+return_data.content.id, null, null,  function (return_data) {                               
-                                                                     if(return_data.content.success) {
-                                                                        $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                                                        downloadDoc();                                                 
-                                                                     } else {
-                                                                        $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                                                     }     
-                                                                  });
-                                                               } 
-                                                            });    
-                                                         } else {                                                
-                                                            $("#form-addClient").find(".form-group").removeClass("has-error");
-                                                            $("#form-addClient").find(".form-group").find(".hintHelp").text("");
-                                                            $("#form-addClient").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
-                                                            $("#form-addClient").find("#"+return_data.content.field+"Help").text(return_data.content.message);
-                                                            $("#form-addClient").find("#"+return_data.content.field).focus();
-                                                         }
-                                                      });
-                                                   }      
-                                                });  
-                                             } else {
-                                                modal.find('.modal-body').html(form_data.content.message);
-                                                modal.find('#msgBoxBtnPri').on('click', function (event) {  
-                                                   $("#msgBox2").modal("hide");   
-                                                });
-                                             }  
-                                             
-                                             $(".clientTypeSelect").click(function(){
-                                                if($(this).val()==2){
-                                                   $(".companyInfo").closest(".form-group").show();
-                                                } else {
-                                                   $(".companyInfo").closest(".form-group").hide();
-                                                }
-                                             })
-
-                                          }).modal('show')
-                                       });
-
-                                    } else if($(this).val()=="") {
-                                       $("#tpbSelectedClentDetail").html("");
-                                    } else {
-                                       ajaxFunc.apiCall("GET", "client/detail/"+$(this).val(), null, null,  function (return_data) {                               
-                                          if(return_data.content.success) {                                 
-                                             $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                             downloadDoc();
-                                          } else {
-                                             $("#tpbSelectedClentDetail").html(return_data.content.message);
-                                          }     
-                                       });
-
-                                       
-                                    }
-                                 });                     
-                                 */
                               } else {
                                  modal.find('.modal-body').html(form_data.content.message);
                                  modal.find('#msgBoxBtnPri').on('click', function (event) {  
@@ -1187,13 +1414,26 @@ include("view/layout/endpage.php");
                                  });    
                               } else {
                                  /* unsuccessfully added, focuse to error field */
-                                 autoTab(return_data.content.tab);
-                                 $("#form-editTPB-submission").find(".form-group").removeClass("has-error");
-                                 $("#form-editTPB-submission").find(".form-group").find(".hintHelp").text("");                                 
-                                 $("#form-editTPB-submission").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
-                                 $("#form-editTPB-submission").find("#"+return_data.content.field+"Help").text(return_data.content.message);
-                                 $("#form-editTPB-submission").find("#"+return_data.content.field).focus();
-
+                                 if(return_data.content.field!='notice'){
+                                    autoTab(return_data.content.tab);
+                                    $("#form-editTPB-submission").find(".form-group").removeClass("has-error");
+                                    $("#form-editTPB-submission").find(".form-group").find(".hintHelp").text("");                                 
+                                    $("#form-editTPB-submission").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
+                                    $("#form-editTPB-submission").find("#"+return_data.content.field+"Help").text(return_data.content.message);
+                                    $("#form-editTPB-submission").find("#"+return_data.content.field).focus();
+                                 } else {
+                                    swal({
+                                       title: return_data.content.message,
+                                       text: return_data.content.message,
+                                       type: "warning",
+                                       buttons: {
+                                          confirm: {
+                                             text: "<?=L('OK');?>",
+                                             className: "btn btn-success",
+                                          }
+                                       },
+                                    });
+                                 }
 
                               }
                               modal.find('#msgBoxBtnPri').html('<?=L("OK");?>');
@@ -1295,12 +1535,26 @@ include("view/layout/endpage.php");
                                  });    
                               } else {
                                  /* unsuccessfully added, focuse to error field */
-                                 autoTab(return_data.content.tab);
-                                 $("#form-editTPB-receive").find(".form-group").removeClass("has-error");
-                                 $("#form-editTPB-receive").find(".form-group").find(".hintHelp").text("");                                 
-                                 $("#form-editTPB-receive").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
-                                 $("#form-editTPB-receive").find("#"+return_data.content.field+"Help").text(return_data.content.message);
-                                 $("#form-editTPB-receive").find("#"+return_data.content.field).focus();
+                                 if(return_data.content.field!='notice'){
+                                    autoTab(return_data.content.tab);
+                                    $("#form-editTPB-receive").find(".form-group").removeClass("has-error");
+                                    $("#form-editTPB-receive").find(".form-group").find(".hintHelp").text("");                                 
+                                    $("#form-editTPB-receive").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
+                                    $("#form-editTPB-receive").find("#"+return_data.content.field+"Help").text(return_data.content.message);
+                                    $("#form-editTPB-receive").find("#"+return_data.content.field).focus();
+                                 } else {
+                                    swal({
+                                       title: return_data.content.message,
+                                       text: return_data.content.message,
+                                       type: "warning",
+                                       buttons: {
+                                          confirm: {
+                                             text: "<?=L('OK');?>",
+                                             className: "btn btn-success",
+                                          }
+                                       },
+                                    });
+                                 }
                               }
                               modal.find('#msgBoxBtnPri').html('<?=L("OK");?>');
                            });
@@ -1335,62 +1589,38 @@ include("view/layout/endpage.php");
                                  });    
                               } else {
                                  /* unsuccessfully added, focuse to error field */
-                                 autoTab(return_data.content.tab);
-                                 $("#form-editTPB-decision").find(".form-group").removeClass("has-error");
-                                 $("#form-editTPB-decision").find(".form-group").find(".hintHelp").text("");                                 
-                                 $("#form-editTPB-decision").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
-                                 $("#form-editTPB-decision").find("#"+return_data.content.field+"Help").text(return_data.content.message);
-                                 $("#form-editTPB-decision").find("#"+return_data.content.field).focus();
+                                 if(return_data.content.field!='notice'){
+                                    autoTab(return_data.content.tab);
+                                    $("#form-editTPB-decision").find(".form-group").removeClass("has-error");
+                                    $("#form-editTPB-decision").find(".form-group").find(".hintHelp").text("");                                 
+                                    $("#form-editTPB-decision").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
+                                    $("#form-editTPB-decision").find("#"+return_data.content.field+"Help").text(return_data.content.message);
+                                    $("#form-editTPB-decision").find("#"+return_data.content.field).focus();
+                                 } else {
+                                    swal({
+                                       title: return_data.content.message,
+                                       text: return_data.content.message,
+                                       type: "warning",
+                                       buttons: {
+                                          confirm: {
+                                             text: "<?=L('OK');?>",
+                                             className: "btn btn-success",
+                                          }
+                                       },
+                                    });
+                                 }
                               }
                               modal.find('#msgBoxBtnPri').html('<?=L("OK");?>');
                            });
                         }  
                      });           
                      
-                     /*
-                     modal.find('#save_pills-condition').click(function(e){
-                        if(document.getElementById("form-editTPB-condition")!==null){    
-                           var data = new FormData(document.getElementById("form-editTPB-condition"));  
-                           modal.find('#msgBoxBtnPri').html('<i class="fa fa-spinner fa-spin"></i>');
-                           ajaxFunc.apiCall("POST", "tpb/conditionEdit/"+button.data('id'), data, "multipart/form-data", function(return_data){                              
-                              if(return_data.content.success) {                                 
-                                 //$("#msgBox").modal("hide");    
-                                 swal({
-                                    title: return_data.content.message,
-                                    text: return_data.content.message,
-                                    type: "warning",
-                                    buttons: {
-                                       confirm: {
-                                          text: "<?=L('OK');?>",
-                                          className: "btn btn-success",
-                                       }
-                                    },
-                                 }).then((willOK) => {
-                                    $("#form-editTPB-condition").find(".form-group").removeClass("has-error");                                    
-                                    
-                                    if (willOK) {                                       
-                                       reloadAllTable();
-                                    } 
-                                    
-                                 });    
-                              } else {
-                                 // unsuccessfully added, focuse to error field 
-                                 autoTab(return_data.content.tab);
-                                 $("#form-editTPB-condition").find(".form-group").removeClass("has-error");
-                                 $("#form-editTPB-condition").find(".form-group").find(".hintHelp").text("");                                 
-                                 $("#form-editTPB-condition").find("#"+return_data.content.field).closest(".form-group").addClass("has-error");
-                                 $("#form-editTPB-condition").find("#"+return_data.content.field+"Help").text(return_data.content.message);
-                                 $("#form-editTPB-condition").find("#"+return_data.content.field).focus();
-                              }
-                              modal.find('#msgBoxBtnPri').html('<?=L("OK");?>');
-                           });
-                        }  
-                     }); */
-                     
                      /* init multiselect field */
+                     /*
                      $('#userID, #zoningID').multiselect({
                         enableHTML: true
                      });
+                     */
 
                      $(".isLandOwnerSelect").click(function(){                        
                         if($(this).val()=="Y"){
@@ -1818,6 +2048,7 @@ include("view/layout/endpage.php");
                                     }).then((willReload) => {
                                        if (willReload) {
                                           conditionTable.ajax.reload(myCallback, false);
+                                          showConditionCalendar(tpbID);
                                        }
                                     });                          
                                  } else {
@@ -1870,6 +2101,7 @@ include("view/layout/endpage.php");
                                                 }).then((willOK) => {
                                                    if (willOK) {
                                                       conditionTable.ajax.reload(myCallback, false); 
+                                                      showConditionCalendar(tpbID);
                                                    } 
                                                 });    
                                              } else {
@@ -3370,9 +3602,11 @@ include("view/layout/endpage.php");
                         
                      }); 
 
+                     /*
                      $('#zoningID').multiselect({
                         enableHTML: true
                      });
+                     */
 
                      addCalendar();
                     
@@ -3530,7 +3764,18 @@ include("view/layout/endpage.php");
             e.preventDefault();
             var button = $(e.currentTarget);
             var tpbID = button.data('id');
-            ajaxFunc.apiCall("GET", "tpb/detail/"+button.data('id'), null, null,  function (form_data) { 
+            show_tpb_detail(tpbID);
+
+        });            
+
+        $('.tpbTable').on('click', 'tbody tr td:not(:last-child)', function(e) {
+            e.preventDefault();
+            show_tpb_detail($(this).parent().attr('id'));                 
+        });      
+
+
+        function show_tpb_detail(tpbID) {
+            ajaxFunc.apiCall("GET", "tpb/detail/"+tpbID, null, null,  function (form_data) { 
                $('#msgBox').one('show.bs.modal', function (ev) {                 
                   var modal = $(this);
                   modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -3547,11 +3792,11 @@ include("view/layout/endpage.php");
                         }     
                      });   
                      
-                     showConditionCalendar(button.data('id'));
+                     showConditionCalendar(tpbID);
                      
                      $("#selected_condition_month").change(function(e){
                         selected_condition_month = $(this).val();
-                        showConditionCalendar(button.data('id'));
+                        showConditionCalendar(tpbID);
                      });
 
                      // conditionTable();
@@ -3561,7 +3806,7 @@ include("view/layout/endpage.php");
                         processing: false,
                         serverSide: true,
                         serverMethod: 'post',
-                        ajax: '<?=$request->baseUrl();?>/script/conditionList.php?mode=view&tpbID='+button.data('id'),
+                        ajax: '<?=$request->baseUrl();?>/script/conditionList.php?mode=view&tpbID='+tpbID,
                            "columns": [
                            { data: 'column_conditionID' },
                            { data: 'column_conditionNo' },
@@ -3603,7 +3848,7 @@ include("view/layout/endpage.php");
                      $('.conditionTable tbody').on('click', '.btnView', function (e) {
                            e.preventDefault();
                            var button = $(e.currentTarget);
-                           ajaxFunc.apiCall("GET", "condition/detail/"+button.data('id'), null, null,  function (form_data) { 
+                           ajaxFunc.apiCall("GET", "condition/detail/"+tpbID, null, null,  function (form_data) { 
                               $('#msgBox2').one('show.bs.modal', function (ev) {                 
                                  var modal = $(this);
                                  //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -3638,7 +3883,7 @@ include("view/layout/endpage.php");
                         processing: false,
                         serverSide: true,
                         serverMethod: 'post',
-                        ajax: '<?=$request->baseUrl();?>/script/eotList.php?mode=view&tpbID='+button.data('id'),
+                        ajax: '<?=$request->baseUrl();?>/script/eotList.php?mode=view&tpbID='+tpbID,
                            "columns": [
                            { data: 'column_eotID' },
                            { data: 'column_extendMonth' },
@@ -3681,7 +3926,7 @@ include("view/layout/endpage.php");
                      $('.eotTable tbody').on('click', '.btnView', function (e) {
                            e.preventDefault();
                            var button = $(e.currentTarget);
-                           ajaxFunc.apiCall("GET", "eot/detail/"+button.data('id'), null, null,  function (form_data) { 
+                           ajaxFunc.apiCall("GET", "eot/detail/"+tpbID, null, null,  function (form_data) { 
                               $('#msgBox2').one('show.bs.modal', function (ev) {                 
                                  var modal = $(this);
                                  //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -3760,7 +4005,7 @@ include("view/layout/endpage.php");
                      $('#sttTable tbody').on('click', '.btnView', function (e) {
                         e.preventDefault();
                         var button = $(e.currentTarget);
-                        ajaxFunc.apiCall("GET", "stt/detail/"+button.data('id'), null, null,  function (form_data) { 
+                        ajaxFunc.apiCall("GET", "stt/detail/"+tpbID, null, null,  function (form_data) { 
                            $('#msgBox2').one('show.bs.modal', function (ev) {                 
                               var modal = $(this);
                               modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -3786,7 +4031,7 @@ include("view/layout/endpage.php");
                                        serverSide: true,
                                        serverMethod: 'post',
                                        autoWidth: false,
-                                       ajax: '<?=$request->baseUrl();?>/script/sttMailingLogList.php?mode=view&sttID='+button.data('id'),
+                                       ajax: '<?=$request->baseUrl();?>/script/sttMailingLogList.php?mode=view&sttID='+tpbID,
                                        "columns": [
                                           { data: 'column_mailingLogID' },
                                           { data: 'column_date' },
@@ -3827,7 +4072,7 @@ include("view/layout/endpage.php");
                                     $('#mailingLogTable tbody').on('click', '.btnView', function (e) {
                                           e.preventDefault();
                                           var button = $(e.currentTarget);
-                                          ajaxFunc.apiCall("GET", "stt/mailingLog/detail/"+button.data('id'), null, null,  function (form_data) { 
+                                          ajaxFunc.apiCall("GET", "stt/mailingLog/detail/"+tpbID, null, null,  function (form_data) { 
                                              $('#msgBox3').one('show.bs.modal', function (ev) {                 
                                                 var modal = $(this);
                                                 //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -3923,7 +4168,7 @@ include("view/layout/endpage.php");
                      $('#stwTable tbody').on('click', '.btnView', function (e) {
                         e.preventDefault();
                         var button = $(e.currentTarget);
-                        ajaxFunc.apiCall("GET", "stw/detail/"+button.data('id'), null, null,  function (form_data) { 
+                        ajaxFunc.apiCall("GET", "stw/detail/"+tpbID, null, null,  function (form_data) { 
                            $('#msgBox2').one('show.bs.modal', function (ev) {                 
                               var modal = $(this);
                               modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -3949,7 +4194,7 @@ include("view/layout/endpage.php");
                                        serverSide: true,
                                        serverMethod: 'post',
                                        autoWidth: false,
-                                       ajax: '<?=$request->baseUrl();?>/script/stwMailingLogList.php?mode=view&stwID='+button.data('id'),
+                                       ajax: '<?=$request->baseUrl();?>/script/stwMailingLogList.php?mode=view&stwID='+tpbID,
                                        "columns": [
                                           { data: 'column_mailingLogID' },
                                           { data: 'column_date' },
@@ -3990,7 +4235,7 @@ include("view/layout/endpage.php");
                                     $('#mailingLogTable tbody').on('click', '.btnView', function (e) {
                                           e.preventDefault();
                                           var button = $(e.currentTarget);
-                                          ajaxFunc.apiCall("GET", "stw/mailingLog/detail/"+button.data('id'), null, null,  function (form_data) { 
+                                          ajaxFunc.apiCall("GET", "stw/mailingLog/detail/"+tpbID, null, null,  function (form_data) { 
                                              $('#msgBox3').one('show.bs.modal', function (ev) {                 
                                                 var modal = $(this);
                                                 //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
@@ -4052,8 +4297,7 @@ include("view/layout/endpage.php");
                   $(this).find('.modal-dialog').removeClass("modal-xl");
                })
             });
-
-        });            
+        }
 
          /* add condition row */
          function addConditionRow() {
@@ -4255,6 +4499,7 @@ include("view/layout/endpage.php");
             ajaxFunc.apiCall("POST", "tpb/getConditionDateByMonth/"+$("#selected_condition_month").val(), {"tpbID":tpbID}, null, function (return_data) {                    
                   if(return_data.content.success){                      
                         $("#conditionCalendar").html(return_data.content.message);
+                        calendarCellClick();
                   }
             });
          }               
@@ -4286,6 +4531,43 @@ include("view/layout/endpage.php");
                $(this).closest(".mailingLogRow").remove();
             });
          }
+
+         function calendarCellClick () {
+            $(".btnCalendarEdit").click(function(e){               
+               e.preventDefault();
+               var button = $(e.currentTarget);
+               type = button.data('type');
+               id = button.data('id');
+
+               ajaxFunc.apiCall("GET", type+"/detail/"+id, null, null,  function (form_data) { 
+                  $('#msgBox2').one('show.bs.modal', function (ev) {                 
+                     var modal = $(this);
+                     //modal.find('.modal-dialog').addClass("modal-xl"); /* extend xl modal */
+                     modal.find('#msgBoxLabel').html("<?=L('View');?> <?=L('Record');?>");
+                     if(form_data.content.success) {
+                        modal.find('.modal-body').html(form_data.content.message);                      
+                        modal.find('#msgBoxBtnPri').on('click', function (event) {  
+                           $("#msgBox2").modal("hide");   
+                        });     
+                     } else {
+                        modal.find('.modal-body').html(form_data.content.message);
+                        modal.find('#msgBoxBtnPri').on('click', function (event) {  
+                           $("#msgBox2").modal("hide");   
+                        });                    
+                     }
+                     downloadDoc();  
+                                 
+                  }).modal('show')
+                  /*
+                  $('#msgBox2').on('hidden.bs.modal', function (e) {
+                     $(this).find('.modal-dialog').removeClass("modal-xl");
+                  })
+                     */               
+               });
+
+            });
+         }
+
       });
 
 </script>

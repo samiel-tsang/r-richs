@@ -57,12 +57,31 @@ class client implements Listable {
     public function delete($request) {	
 		if (!user::checklogin()) 
 			return new Data(['success'=>false, 'message'=>L('login.signInMessage')]);	
+
+        $currentUserObj = unserialize($_SESSION['user']);            
 		
 		if (!isset($request->get->id) || empty($request->get->id))
 			return new Data(['success'=>false, 'message'=>L('error.clientEmptyID')]);	
+
+        $clientObj = self::find($request->get->id);		
+	
+        if(is_null($clientObj))
+            return new Data(['success'=>false, 'message'=>L('error.clientNotFound'), 'field'=>'notice']);	            
 			
 		$sql = Sql::delete('client')->where(['id', '=', $request->get->id]);
 		if ($sql->prepare()->execute()) {
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Client";
+			$logData['referenceID'] = $request->get->id;
+			$logData['action'] = "Delete";
+			$logData['description'] = "Delete Client [".$clientObj->contactPerson."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $request->get->id;
+			$logData['changes'] = [];
+			systemLog::add($logData);	
+
 			return new Data(['success'=>true, 'message'=>L('info.clientDeleted')]);	
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.clientDeleteFailed')]);	
@@ -268,27 +287,112 @@ class client implements Listable {
             'modifyBy'=>$currentUserObj->id
         ]);
 
-		if ($sql->prepare()->execute([
-                strip_tags($request->post->clientTypeID),
-                strip_tags($request->post->title),
-                strip_tags($request->post->contactPerson), 
-                strip_tags($request->post->position),
-                strip_tags($request->post->phone), 
-                strip_tags($request->post->email), 
-                strip_tags($request->post->address),
-                strip_tags($request->post->idCardNo),
-                strip_tags($idCardDocID),
-                strip_tags($request->post->userID),
-                strip_tags($request->post->companyEnglishName), 
-                strip_tags($request->post->companyChineseName), 
-                strip_tags($request->post->sameAddress=="On"?$request->post->address:$request->post->companyAddress), 
-                strip_tags($request->post->CINo),
-                strip_tags($CIDocID), 
-                strip_tags($request->post->BRNo),
-                strip_tags($BRDocID), 
-         ])) {
+		$addValues = [
+            strip_tags($request->post->clientTypeID),
+            strip_tags($request->post->title),
+            strip_tags($request->post->contactPerson), 
+            strip_tags($request->post->position),
+            strip_tags($request->post->phone), 
+            strip_tags($request->post->email), 
+            strip_tags($request->post->address),
+            strip_tags($request->post->idCardNo),
+            strip_tags($idCardDocID),
+            strip_tags($request->post->userID),
+            strip_tags($request->post->companyEnglishName), 
+            strip_tags($request->post->companyChineseName), 
+            strip_tags($request->post->sameAddress=="On"?$request->post->address:$request->post->companyAddress), 
+            strip_tags($request->post->CINo),
+            strip_tags($CIDocID), 
+            strip_tags($request->post->BRNo),
+            strip_tags($BRDocID)            
+	 	];        
+
+		if ($sql->prepare()->execute($addValues)) {
 			
             $id = db()->lastInsertId();
+
+			$logData = [];
+			$logData['userID']= $currentUserObj->id;
+			$logData['module'] = "Client";
+			$logData['referenceID'] = $id;
+			$logData['action'] = "Insert";
+			$logData['description'] = "Create New Client [".$request->post->contactPerson."]";
+			$logData['sqlStatement'] = $sql;
+			$logData['sqlValue'] = $addValues;
+			$logData['changes'] = 
+				[
+					[
+						"key"=>"clientTypeID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->clientTypeID)
+                    ],[
+						"key"=>"title", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->title)
+                    ],[
+						"key"=>"contactPerson", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->contactPerson)
+                    ],[
+						"key"=>"position", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->position)
+                    ],[
+						"key"=>"phone", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->phone)
+                    ],[
+						"key"=>"email", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->email)
+                    ],[
+						"key"=>"address", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->address)
+                    ],[
+						"key"=>"idCardNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->idCardNo)
+                    ],[
+						"key"=>"idCardDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($idCardDocID)
+                    ],[
+						"key"=>"userID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->userID)
+                    ],[
+						"key"=>"companyEnglishName", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->companyEnglishName)
+                    ],[
+						"key"=>"companyChineseName", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->companyChineseName)
+                    ],[
+						"key"=>"companyAddress", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->sameAddress=="On"?$request->post->address:$request->post->companyAddress)
+                    ],[
+						"key"=>"CINo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->CINo)
+                    ],[
+						"key"=>"CIDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($CIDocID)
+                    ],[
+						"key"=>"BRNo", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($request->post->BRNo)
+                    ],[
+						"key"=>"BRDocID", 
+						"valueFrom"=>"", 
+						"valueTo"=>strip_tags($BRDocID)
+                    ],
+				];
+
+			systemLog::add($logData);            
 
 			return new Data(['success'=>true, 'message'=>L('info.saved'), 'id'=>$id, 'name'=>$request->post->contactPerson]);
 			
@@ -309,6 +413,7 @@ class client implements Listable {
 			return new Data(['success'=>false, 'message'=>L('error.clientEmptyID'), 'field'=>'notice']);
 
 		$clientObj = self::find($request->get->id);
+
 		if(is_null($clientObj))
 			return new Data(['success'=>false, 'message'=>L('error.clientNotFound'), 'field'=>'notice']);
 
@@ -372,76 +477,207 @@ class client implements Listable {
         */
         $editFields = [];
 		$editValues = [];
+		$logContent = [];		
+
 
 		if (isset($request->post->clientTypeID) && !empty($request->post->clientTypeID)) {
+
 			$editFields['clientTypeID'] = "?";
 			$editValues[] = $request->post->clientTypeID;
-		}		
 
+			if($request->post->clientTypeID!=$clientObj->clientTypeID) {
+				$logContent[] = [
+					"key"=>"clientTypeID", 
+					"valueFrom"=>$clientObj->clientTypeID, 
+					"valueTo"=>strip_tags($request->post->clientTypeID)					
+				];	
+			}			
+		}	
+        
 		if (isset($request->post->title) && !empty($request->post->title)) {
+
 			$editFields['title'] = "?";
 			$editValues[] = $request->post->title;
-		}		
-        
+
+			if($request->post->title!=$clientObj->title) {
+				$logContent[] = [
+					"key"=>"title", 
+					"valueFrom"=>$clientObj->title, 
+					"valueTo"=>strip_tags($request->post->title)					
+				];	
+			}			
+		}	          
+
 		if (isset($request->post->contactPerson) && !empty($request->post->contactPerson)) {
+
 			$editFields['contactPerson'] = "?";
 			$editValues[] = $request->post->contactPerson;
-		}		
-        
-		if (isset($request->post->position) && !empty($request->post->position)) {
+
+			if($request->post->contactPerson!=$clientObj->contactPerson) {
+				$logContent[] = [
+					"key"=>"contactPerson", 
+					"valueFrom"=>$clientObj->contactPerson, 
+					"valueTo"=>strip_tags($request->post->contactPerson)					
+				];	
+			}			
+		}	
+	
+        if (isset($request->post->position) && !empty($request->post->position)) {
+
 			$editFields['position'] = "?";
 			$editValues[] = $request->post->position;
-		}		
+
+			if($request->post->position!=$clientObj->position) {
+				$logContent[] = [
+					"key"=>"position", 
+					"valueFrom"=>$clientObj->position, 
+					"valueTo"=>strip_tags($request->post->position)					
+				];	
+			}			
+		}	 
         
-		if (isset($request->post->phone) && !empty($request->post->phone)) {
+        if (isset($request->post->phone) && !empty($request->post->phone)) {
+
 			$editFields['phone'] = "?";
 			$editValues[] = $request->post->phone;
+
+			if($request->post->phone!=$clientObj->phone) {
+				$logContent[] = [
+					"key"=>"phone", 
+					"valueFrom"=>$clientObj->phone, 
+					"valueTo"=>strip_tags($request->post->phone)					
+				];	
+			}			
 		}		
         
-		if (isset($request->post->email) && !empty($request->post->email)) {
+        if (isset($request->post->email) && !empty($request->post->email)) {
+
 			$editFields['email'] = "?";
 			$editValues[] = $request->post->email;
+
+			if($request->post->email!=$clientObj->email) {
+				$logContent[] = [
+					"key"=>"email", 
+					"valueFrom"=>$clientObj->email, 
+					"valueTo"=>strip_tags($request->post->email)					
+				];	
+			}			
 		}		
-        
-		if (isset($request->post->address) && !empty($request->post->address)) {
+
+        if (isset($request->post->address) && !empty($request->post->address)) {
+
 			$editFields['address'] = "?";
 			$editValues[] = $request->post->address;
-		}		
-        
-		if (isset($request->post->idCardNo) && !empty($request->post->idCardNo)) {
+
+			if($request->post->address!=$clientObj->address) {
+				$logContent[] = [
+					"key"=>"address", 
+					"valueFrom"=>$clientObj->address, 
+					"valueTo"=>strip_tags($request->post->address)					
+				];	
+			}			
+		}	        
+
+        if (isset($request->post->idCardNo) && !empty($request->post->idCardNo)) {
+
 			$editFields['idCardNo'] = "?";
 			$editValues[] = $request->post->idCardNo;
-		}	
 
-		if (isset($request->post->userID) && !empty($request->post->userID)) {
+			if($request->post->idCardNo!=$clientObj->idCardNo) {
+				$logContent[] = [
+					"key"=>"idCardNo", 
+					"valueFrom"=>$clientObj->idCardNo, 
+					"valueTo"=>strip_tags($request->post->idCardNo)					
+				];	
+			}			
+		}	     
+        
+
+        if (isset($request->post->userID) && !empty($request->post->userID)) {
+
 			$editFields['userID'] = "?";
 			$editValues[] = $request->post->userID;
-		}	
-        
-		if (isset($request->post->companyEnglishName) && !empty($request->post->companyEnglishName)) {
+
+			if($request->post->userID!=$clientObj->userID) {
+				$logContent[] = [
+					"key"=>"userID", 
+					"valueFrom"=>$clientObj->userID, 
+					"valueTo"=>strip_tags($request->post->userID)					
+				];	
+			}			
+		}	   
+
+
+        if (isset($request->post->companyEnglishName) && !empty($request->post->companyEnglishName)) {
+
 			$editFields['companyEnglishName'] = "?";
 			$editValues[] = $request->post->companyEnglishName;
-		}	
 
-		if (isset($request->post->companyChineseName) && !empty($request->post->companyChineseName)) {
+			if($request->post->companyEnglishName!=$clientObj->companyEnglishName) {
+				$logContent[] = [
+					"key"=>"companyEnglishName", 
+					"valueFrom"=>$clientObj->companyEnglishName, 
+					"valueTo"=>strip_tags($request->post->companyEnglishName)					
+				];	
+			}			
+		}	  
+
+        if (isset($request->post->companyChineseName) && !empty($request->post->companyChineseName)) {
+
 			$editFields['companyChineseName'] = "?";
 			$editValues[] = $request->post->companyChineseName;
+
+			if($request->post->companyChineseName!=$clientObj->companyChineseName) {
+				$logContent[] = [
+					"key"=>"companyChineseName", 
+					"valueFrom"=>$clientObj->companyChineseName, 
+					"valueTo"=>strip_tags($request->post->companyChineseName)					
+				];	
+			}			
 		}	        
-        
-		if (isset($request->post->companyAddress) && !empty($request->post->companyAddress)) {
+
+        if (isset($request->post->companyAddress) && !empty($request->post->companyAddress)) {
+
 			$editFields['companyAddress'] = "?";
 			$editValues[] = $request->post->companyAddress;
-		}	
-        
-		if (isset($request->post->CINo) && !empty($request->post->CINo)) {
+
+			if($request->post->companyAddress!=$clientObj->companyAddress) {
+				$logContent[] = [
+					"key"=>"companyAddress", 
+					"valueFrom"=>$clientObj->companyAddress, 
+					"valueTo"=>strip_tags($request->post->companyAddress)					
+				];	
+			}			
+		}	 
+      
+
+        if (isset($request->post->CINo) && !empty($request->post->CINo)) {
+
 			$editFields['CINo'] = "?";
 			$editValues[] = $request->post->CINo;
-		}	
 
-		if (isset($request->post->BRNo) && !empty($request->post->BRNo)) {
+			if($request->post->CINo!=$clientObj->CINo) {
+				$logContent[] = [
+					"key"=>"CINo", 
+					"valueFrom"=>$clientObj->CINo, 
+					"valueTo"=>strip_tags($request->post->CINo)					
+				];	
+			}			
+		}	 
+        
+        if (isset($request->post->BRNo) && !empty($request->post->BRNo)) {
+
 			$editFields['BRNo'] = "?";
 			$editValues[] = $request->post->BRNo;
-		}	
+
+			if($request->post->BRNo!=$clientObj->BRNo) {
+				$logContent[] = [
+					"key"=>"BRNo", 
+					"valueFrom"=>$clientObj->BRNo, 
+					"valueTo"=>strip_tags($request->post->BRNo)					
+				];	
+			}			
+		}	      
 
         $idCardDocID = $clientObj->idCardDocID;
         $CIDocID = $clientObj->CIDocID;
@@ -449,35 +685,59 @@ class client implements Listable {
 
         if (isset($request->files->idCardDoc) && !empty($request->files->idCardDoc)) {
             $idCardDocID = documentHelper::upload($request->files->idCardDoc, "HKID");
-            if($idCardDocID>0) {
-                $editFields['idCardDocID'] = "?";
-                $editValues[] = $idCardDocID;  
+			$editFields['idCardDocID'] = "?";
+			$editValues[] = $idCardDocID;  
+			if($idCardDocID>0) {
+				$logContent[] = [
+					"key"=>"idCardDocID", 
+					"valueFrom"=>$clientObj->idCardDocID, 
+					"valueTo"=>strip_tags($idCardDocID)					
+				];	                
             }
         }
 
         if ($request->post->clientTypeID==2) {
             if (isset($request->files->CIDoc) && !empty($request->files->CIDoc)) {
                 $CIDocID = documentHelper::upload($request->files->CIDoc, "CI");
-                if($CIDocID>0) {
-                    $editFields['CIDocID'] = "?";
-                    $editValues[] = $CIDocID;
+				$editFields['CIDocID'] = "?";
+				$editValues[] = $CIDocID;				
+				if($CIDocID>0) {
+                    $logContent[] = [
+                        "key"=>"CIDocID", 
+                        "valueFrom"=>$clientObj->CIDocID, 
+                        "valueTo"=>strip_tags($CIDocID)					
+                    ];	                       
                 }
             }
             
             if (isset($request->files->BRDoc) && !empty($request->files->BRDoc)) {
                 $BRDocID = documentHelper::upload($request->files->BRDoc, "BR");
-                if($BRDocID>0) {
-                    $editFields['BRDocID'] = "?";
-                    $editValues[] = $BRDocID;
+				$editFields['BRDocID'] = "?";
+				$editValues[] = $BRDocID;				
+				if($BRDocID>0) {
+                    $logContent[] = [
+                        "key"=>"BRDocID", 
+                        "valueFrom"=>$clientObj->BRDocID, 
+                        "valueTo"=>strip_tags($BRDocID)					
+                    ];	                    
                 }                
             }        
         }
 
 
-		if (isset($request->post->status) && !empty($request->post->status)) {
+        if (isset($request->post->status) && !empty($request->post->status)) {
+
 			$editFields['status'] = "?";
 			$editValues[] = $request->post->status;
-		}	        
+			
+			if($request->post->status!=$clientObj->status) {
+				$logContent[] = [
+					"key"=>"status", 
+					"valueFrom"=>$clientObj->status, 
+					"valueTo"=>strip_tags($request->post->status)					
+				];	
+			}			
+		}	         
         
 		if (count($editFields)) {
 			$editFields['modifyDate'] = "NOW()";
@@ -489,6 +749,18 @@ class client implements Listable {
 		$sql = Sql::update('client')->setFieldValue($editFields)->where(['id', '=', $request->get->id]);
 
 		if ($sql->prepare()->execute($editValues)) {
+			if (count($logContent)) {
+				$logData = [];
+				$logData['userID']= $currentUserObj->id;
+				$logData['module'] = "Client";
+				$logData['referenceID'] = $request->get->id;
+				$logData['action'] = "Update";
+				$logData['description'] = "Edit Client [".$clientObj->contactPerson."]";
+				$logData['sqlStatement'] = $sql;
+				$logData['sqlValue'] = $editValues;			
+				$logData['changes'] = $logContent;
+				systemLog::add($logData);
+			}
 			return new Data(['success'=>true, 'message'=>L('info.updated')]);			
 		} else {
 			return new Data(['success'=>false, 'message'=>L('error.unableUpdate'), 'field'=>'notice']);
@@ -678,8 +950,9 @@ class client implements Listable {
             if($clientObj->BRDocID>0) {
                 $content .= formLayout::rowDisplayClearLineNew('<div class="d-flex gap-2 btnGrp"><button type="button" class="btn btn-black downloadDoc btn-xs" data-id="'.$clientObj->BRDocID.'"><i class="fas fa-download"></i></button></div>', 6);           
             }  
-        $content .= "</div>";         
-/*        
+        $content .= "</div>";      
+
+        /*        
         $content .= formLayout::rowSeparatorLineNew(12);        
 
         $content .= "<div class='row'>";
@@ -687,9 +960,9 @@ class client implements Listable {
                 $content .= "<button type='button' class='btn btn-md btn-success' id='next_pills-application'>".L('Next')."</button>";
             $content .= "</div>";                 
         $content .= "</div>"; 
-*/
-        return new Data(['success'=>true, 'message'=>$content]);
+        */
 
+        return new Data(['success'=>true, 'message'=>$content]);
 
     }
 }
